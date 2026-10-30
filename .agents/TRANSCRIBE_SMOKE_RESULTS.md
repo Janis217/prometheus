@@ -1,5 +1,25 @@
 # Live-transcription acoustic smoke record
 
+## Software backlog recheck (2026-10-30)
+
+The transcription-first software migration is already implemented. Rechecked
+settings validation, architecture removal/isolation contracts and once-only
+transcript ingress; no speech architecture replacement was needed.
+
+```powershell
+$env:JAVA_HOME = 'C:/Program Files/Java/jdk-21'
+& 'C:/Users/StartKlar/.m2/wrapper/dists/apache-maven-3.9.12/6068d197/bin/mvn.cmd' -o -q '-Dtest=LiveTranscriptionSettingsNormalizerTest,SpeechArchitectureSourceContractTest,SpeechArchitectureBrowserClientContractTest' test
+node tests/js/transcription/ingress.test.mjs
+```
+
+Passed 15 Java cases (6 settings, 4 source contracts, 5 browser-source contracts)
+and 4 Node ingress cases, zero failures/errors/skips. Logs:
+target/backlog-transcribe-java.log and target/backlog-transcribe-node.log;
+Maven reports: target/surefire-reports. Source contracts are not executed browser
+journeys. No database/provider or physical trial was run; all acoustic NOT RUN
+rows below remain unchanged. Backlog closure covers delivered software only.
+Next: Connection Lifecycle.
+
 This record compares the former combined Realtime speech session with the
 transcription-first PROMETHEUS pipeline. Never infer a physical result from an
 automated test. Use `PASS`, `FAIL`, or `NOT RUN` and attach concise evidence.

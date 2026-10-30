@@ -1,5 +1,23 @@
 # Classroom connection lifecycle
 
+## Chronological backlog recheck (2026-10-30)
+
+CL-01 through CL-03 already have implementation and historical acceptance below.
+No transaction/lifecycle rewrite was needed. Current focused checks:
+
+```powershell
+$env:JAVA_HOME = 'C:/Program Files/Java/jdk-21'
+& 'C:/Users/StartKlar/.m2/wrapper/dists/apache-maven-3.9.12/6068d197/bin/mvn.cmd' -o -q '-Dtest=SseBroadcasterHardeningUnitTest' test
+node tests/js/transcription/media.test.mjs
+```
+
+Passed 11 SSE hardening Java tests and 2 Node microphone lease/cleanup tests,
+zero failures/errors/skips. Logs: target/backlog-lifecycle-java.log and
+target/backlog-lifecycle-node.log; Java report is in target/surefire-reports.
+These unit checks are narrower than historical classroom/MySQL/browser acceptance;
+no current pool/concurrency, provider throughput, deployment or physical audio
+claim follows. Next: Gala Improvement, respecting the main/deployment boundary.
+
 Authorized sequence: CL-01 release connections during SSE, CL-02 bound scoped
 creation transactions, CL-03 classroom/browser acceptance and branch integration.
 Implement on main; commit/push each completed milestone; merge main into

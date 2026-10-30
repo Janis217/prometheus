@@ -1,5 +1,35 @@
 # GPT-Live implementation and acceptance evidence
 
+## Shared received-audio inspection (2026-10-30)
+
+CI-01/CI-02 are implemented in the current checkout independently of deferred
+Gala. Local one-session received-track recording, final-flush-safe export and
+metadata correlation have unit/browser/native-codec/package evidence. Full
+isolated app/MySQL acceptance and physical trials remain open; no cutoff fix is
+claimed. See [CUTOFF_INSPECTION_RESULTS.md](CUTOFF_INSPECTION_RESULTS.md) for
+commands, failures, fixes, counts and the remaining prerequisite gap.
+
+## Chronological backlog recheck (2026-10-30)
+
+Existing software and historical offline acceptance are delivered; no rewrite was
+needed. Rechecked segmentation, context delivery, scoped session validation and
+browser startup/stop/failure fences with existing tests. Commands:
+
+```powershell
+$env:JAVA_HOME = 'C:/Program Files/Java/jdk-21'
+& 'C:/Users/StartKlar/.m2/wrapper/dists/apache-maven-3.9.12/6068d197/bin/mvn.cmd' -o -q '-Dtest=LiveTranscriptSegmenterUnitTest,LiveContextDeliveryUnitTest,ScopedLiveSessionServiceUnitTest' test
+node tests/js/live/client.test.mjs
+```
+
+Both commands passed: 43 Java cases (10 segmentation, 25 delivery, 8 scoped session).
+Reports are under target/surefire-reports for those three
+classes; logs: target/backlog-gptlive-java.log and target/backlog-gptlive-node.log.
+The client file passed 16 tests. Providers/media are synthetic. No database,
+provider quality, physical audio, deployment or acoustic acceptance was rerun.
+The backlog closes delivered software, not these retained manual acceptance gates.
+GitHub issues remain disabled; no issue, commit, push or deployment was created.
+Next chronological milestone: Need for Speed.
+
 ## Identified hand-capture windows (2026-10-22)
 
 Shared cockpit work starts on feature/gptlive. Optional display.captureId is echoed

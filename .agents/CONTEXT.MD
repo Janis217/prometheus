@@ -194,6 +194,11 @@ sensor input, rendered output or confirmed action completion.
 
 ## GPT-Live Experiment
 
+Optional received-audio inspection is a browser-local, one-session opt-in under
+the Live controls. It clones the received track without changing playback; audio
+is never automatically uploaded or embedded in ordinary telemetry. Scope changes
+discard it. See README and CUTOFF_INSPECTION_RESULTS.md for limits and acceptance.
+
 Application-owned Live policies may disable pending-work acknowledgments through
 `ExternalVoicePolicy.livePendingAcknowledgements()` (default true). The adapter
 removes permission from common voice and task guidance when false. This is prompt

@@ -1,10 +1,142 @@
 import { test, expect } from "./fixtures/offline-ui-assets.mjs";
+import { writeFile } from "node:fs/promises";
 
 const ID = "11111111-1111-4111-8111-111111111111";
 const AGENT = { id: ID, name: "Valerian voice pilot", description: "Multimodal conversation", active: true, languageCode: "en",
   interactionProfile: { supportedObservations: ["obs.user_utterance", "obs.emotion.face"], supportedBehaviourModalities: ["speech", "nonVerbal.gesture", "display"], profileTags: [] } };
 const json = body => ({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
 const event = (id, speech, provenance = null) => ({ id, type: "resp.behaviour_plan", actor: "assistant", kind: "response", payload: JSON.stringify({ speech }), provenance, createdDate: "2026-09-28T10:00:00Z" });
+
+async function recordingFake(page, unsupported = false) {
+  await page.addInitScript(unsupported => {
+    window.MediaStream = class { constructor(tracks) { this.tracks = tracks; } };
+    window.MediaRecorder = class {
+      static isTypeSupported() { return !unsupported; }
+      constructor(stream, options) { this.stream = stream; this.mimeType = options.mimeType; window.__recorder = this; }
+      start() { this.state = "recording"; queueMicrotask(() => this.onstart?.()); }
+      stop() { this.state = "inactive"; }
+      flush() { this.ondataavailable?.({ data: new Blob(["header-and-final-tail"]) }); this.onstop?.(); }
+    };
+  }, unsupported);
+}
+
+for (const [theme, mobile] of [["light", false], ["dark", true]]) {
+  test(`received audio recording consent, final flush and scope cleanup ${theme}`, async ({ page, context }, info) => {
+    const second = { ...AGENT, id: "22222222-2222-4222-8222-222222222222", name: "Second agent" };
+    await setup(context, { agents: [AGENT, second] }); await recordingFake(page);
+    await page.addInitScript(value => localStorage.setItem("prometheus.valerian.theme", value), theme);
+    if (mobile) await page.setViewportSize({ width: 390, height: 844 });
+    await open(page);
+    const root = page.getByTestId("gptlive-recording"); await root.locator("summary").click();
+    await expect(root.locator("[data-recording-status]")).toHaveText("Off");
+    await page.getByTestId("gptlive-start").click(); await expect(page.getByTestId("gptlive-status")).toHaveText("Active");
+    expect(await page.evaluate(() => !!window.__recorder)).toBe(false);
+    await page.getByTestId("gptlive-stop").click(); await expect(page.getByTestId("gptlive-start")).toBeEnabled();
+    await root.getByRole("button", { name: "Arm next session" }).click();
+    await expect(root.locator("[data-recording-status]")).toContainText("Armed");
+    await page.getByTestId("gptlive-start").click(); await expect(root.locator("[data-recording-status]")).toContainText("Recording received audio");
+    const captures = await page.evaluate(() => window.__live.captures);
+    await root.getByRole("button", { name: "Stop recording", exact: true }).click();
+    await expect(root.locator("[data-recording-status]")).toContainText("Finalizing");
+    await expect(root.getByRole("button", { name: "Download audio + telemetry" })).toBeDisabled();
+    await expect(page.getByTestId("gptlive-status")).toHaveText("Active");
+    await page.evaluate(() => window.__recorder.flush());
+    await expect(root.locator("[data-recording-status]")).toContainText("ready to download");
+    expect(await page.evaluate(() => window.__live.captures)).toBe(captures);
+    const downloads = []; page.on("download", download => downloads.push(download));
+    await root.getByRole("button", { name: "Download audio + telemetry" }).click();
+    await expect.poll(() => downloads.length).toBe(2);
+    expect(downloads.map(value => value.suggestedFilename()).some(value => value.endsWith(".webm"))).toBe(true);
+    const manifest = await page.evaluate(async () => (await import("/performance/export.js")).telemetrySnapshot().receivedAudioRecording);
+    expect(manifest.bytes).toBeGreaterThan(0); expect(manifest.status).toBe("ready");
+    await root.screenshot({ path: info.outputPath(`recording-${theme}.png`) });
+    expect(await root.evaluate(node => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
+    await page.getByTestId("gptlive-stop").click(); await expect(page.getByTestId("gptlive-start")).toBeEnabled();
+    await page.getByTestId("gptlive-start").click(); await expect(page.getByTestId("gptlive-status")).toHaveText("Active");
+    await expect(root.locator("[data-recording-status]")).toContainText("ready to download");
+    await page.locator("#open_diagnostics").click();
+    await expect(page.locator("#diagnostics_drawer")).not.toHaveClass(/showing/);
+    await page.getByTestId("agent-select").selectOption(second.id);
+    expect(await page.evaluate(async () => (await import("/live/audio-recording.js")).receivedAudioRecording.manifest())).toBeNull();
+    await page.locator("#diagnostics_drawer").getByRole("button", { name: "Close", exact: true }).click();
+    await expect(page.locator("#diagnostics_drawer")).toBeHidden();
+    await page.getByTestId("clear-access-code").click();
+    expect(await page.evaluate(async () => (await import("/live/audio-recording.js")).receivedAudioRecording.manifest())).toBeNull();
+  });
+}
+
+test("received audio recording unsupported and recorder error leave Live usable", async ({ page, context }) => {
+  await setup(context); await recordingFake(page, true); await open(page);
+  const root = page.getByTestId("gptlive-recording"); await root.locator("summary").click();
+  await expect(root.locator("[data-recording-status]")).toContainText("unavailable");
+  await expect(root.getByRole("button", { name: "Arm next session" })).toBeDisabled();
+  await page.getByTestId("gptlive-start").click(); await expect(page.getByTestId("gptlive-status")).toHaveText("Active");
+  await page.getByTestId("gptlive-stop").click(); await expect(page.getByTestId("gptlive-start")).toBeEnabled();
+  await page.evaluate(async () => {
+    const { receivedAudioRecording: recording } = await import("/live/audio-recording.js");
+    recording.mime = "audio/webm;codecs=opus"; recording.arm();
+  });
+  await page.getByTestId("gptlive-start").click(); await expect(root.locator("[data-recording-status]")).toContainText("Recording received");
+  await page.evaluate(() => window.__recorder.onerror({ error: "private provider detail" }));
+  await expect(root.locator("[data-recording-status]")).toContainText("incomplete");
+  await expect(page.getByTestId("gptlive-status")).toHaveText("Active");
+  await root.getByRole("button", { name: "Discard recording" }).click();
+  await expect(root.locator("[data-recording-status]")).toHaveText("Off");
+});
+
+test("received audio real MediaRecorder export preserves a late tone and silent tail", async ({ page }, info) => {
+  await page.goto("/valerian/"); await page.locator("body").click();
+  const result = await page.evaluate(async () => {
+    const { ReceivedAudioRecording } = await import("/live/audio-recording.js");
+    const recording = new ReceivedAudioRecording();
+    if (!recording.mime) throw new Error("No supported native recording codec");
+    const context = new AudioContext(); await context.resume();
+    const source = context.createOscillator(), gain = context.createGain(), destination = context.createMediaStreamDestination();
+    source.frequency.value = 880; gain.gain.value = 0; source.connect(gain).connect(destination);
+    source.start();
+    const run = { agentId: "synthetic", handle: "synthetic-session", generation: 1 };
+    recording.arm(); recording.begin(run); recording.received(run, destination.stream.getAudioTracks()[0]);
+    // Place the tone after a real timeslice was delivered, so it must survive the
+    // final flush. Encoder startup delay is not a sample-exact wall-clock offset.
+    const deadline = performance.now() + 5000;
+    while (recording.clip.chunkCount < 1) {
+      if (performance.now() > deadline) throw new Error("Native recorder delivered no initial timeslice");
+      await new Promise(resolve => setTimeout(resolve, 20));
+    }
+    const chunksBeforeTone = recording.clip.chunkCount;
+    const base = context.currentTime;
+    gain.gain.setValueAtTime(0.3, base + 0.12); gain.gain.setValueAtTime(0, base + 0.32);
+    await new Promise(resolve => setTimeout(resolve, 700)); recording.stop();
+    await new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => { off(); reject(new Error("Native recorder did not finalize")); }, 6000);
+      const off = recording.subscribe(() => {
+        if (!["ready", "error"].includes(recording.status)) return;
+        clearTimeout(timeout); off(); recording.status === "ready" ? resolve() : reject(new Error("Native recorder failed"));
+      });
+    });
+    // Decode the actual downloadable blob, not a mocked chunk-size assertion.
+    const downloads = []; recording.download({ live: { sessions: [] } }, (blob, filename) => downloads.push({ blob, filename }));
+    const decoded = await context.decodeAudioData(await downloads[0].blob.arrayBuffer());
+    const samples = decoded.getChannelData(0), rate = decoded.sampleRate;
+    const rms = (start, end) => {
+      const part = samples.slice(Math.floor(start * rate), Math.floor(end * rate));
+      return Math.sqrt(part.reduce((sum, value) => sum + value * value, 0) / part.length);
+    };
+    let lateRms = 0;
+    for (let start = Math.max(0, decoded.duration - 0.8); start < decoded.duration - 0.12; start += 0.02)
+      lateRms = Math.max(lateRms, rms(start, start + 0.04));
+    const values = { duration: decoded.duration, lateRms, tailRms: rms(decoded.duration - 0.12, decoded.duration - 0.02), chunksBeforeTone,
+      mime: recording.manifest().mimeType, bytes: downloads[0].blob.size, chunks: recording.manifest().chunkCount,
+      manifest: JSON.parse(await downloads[1].blob.text()), userAgent: navigator.userAgent };
+    source.stop(); destination.stream.getTracks().forEach(track => track.stop()); recording.discard(); await context.close();
+    return values;
+  });
+  const evidence = info.outputPath("native-codec-evidence.json");
+  await writeFile(evidence, JSON.stringify(result, null, 2));
+  await info.attach("native-codec-evidence", { path: evidence, contentType: "application/json" });
+  expect(result.chunksBeforeTone).toBeGreaterThanOrEqual(1); expect(result.lateRms).toBeGreaterThan(0.1);
+  expect(result.tailRms).toBeLessThan(0.02); expect(result.bytes).toBeGreaterThan(0); expect(result.chunks).toBeGreaterThanOrEqual(2);
+});
 
 test("presence reception preserves brief dropouts, closes sustained departure and starts a fresh encounter", async ({ page, context }, info) => {
   const agent = { ...AGENT, name: "GIGI", interactionProfile: { ...AGENT.interactionProfile,
@@ -148,7 +280,7 @@ async function setup(context, scenario = {}) {
     HTMLMediaElement.prototype.play = async function () { window.__live.plays++; };
     HTMLMediaElement.prototype.pause = function () { window.__live.pauses++; };
     HTMLMediaElement.prototype.setSinkId = async function (value) { window.__live.sinks.push(value); };
-    class Track extends EventTarget { constructor() { super(); this.kind = "audio"; this.enabled = true; } stop() { this.stopped = true; } getSettings() { return { echoCancellation: true, noiseSuppression: true, autoGainControl: true }; } }
+    class Track extends EventTarget { constructor() { super(); this.kind = "audio"; this.enabled = true; } clone() { return new Track(); } stop() { this.stopped = true; } getSettings() { return { echoCancellation: true, noiseSuppression: true, autoGainControl: true }; } }
     Object.defineProperty(navigator, "mediaDevices", { configurable: true, value: {
       async getUserMedia() { window.__live.captures++; if (window.__live.denied) throw new DOMException("Denied", "NotAllowedError"); const track = new Track(); window.__live.tracks.push(track); return { getAudioTracks: () => [track], getTracks: () => [track] }; },
       async enumerateDevices() { return [{ kind: "audioinput", deviceId: "mic", label: "Built-in microphone" }, { kind: "audiooutput", deviceId: "speaker", label: "Built-in speakers" }]; },

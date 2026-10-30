@@ -2,10 +2,39 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { LiveClient } from "../../../src/main/resources/public/live/client.js";
 import { LiveCaptions } from "../../../src/main/resources/public/live/captions.js";
+import { ReceivedAudioRecording } from "../../../src/main/resources/public/live/audio-recording.js";
 import { MicrophoneLease } from "../../../src/main/resources/public/transcription/media.js";
 import { OutputLease } from "../../../src/main/resources/public/speech/playback.js";
 
 const deferred = () => { let resolve; const promise = new Promise(done => { resolve = done; }); return { promise, resolve }; };
+
+test("optional recorder observes only received audio and never delays immediate Stop or re-arms", async () => {
+  let recorder;
+  class Recorder {
+    static isTypeSupported() { return true; }
+    constructor() { recorder = this; this.mimeType = "audio/webm"; }
+    start() { this.state = "recording"; this.onstart(); }
+    stop() { this.state = "inactive"; }
+  }
+  const recording = new ReceivedAudioRecording({ Recorder, stream: track => ({ track }), uuid: () => "recording-test" });
+  const cleanup = deferred(); const f = fixture({ client: { recording }, respond: async (_, request) => request.method === "DELETE" ? cleanup.promise : null });
+  recording.arm(); await f.start(); assert.equal(recording.status, "waiting");
+  const clone = { stop() { this.stopped = true; } };
+  const output = { kind: "audio", clone: () => clone };
+  const originalStream = {};
+  f.peer.ontrack({ track: output, streams: [originalStream] });
+  assert.equal(f.audio.srcObject, originalStream); assert.equal(recording.status, "recording");
+  await f.client.mute(); assert.equal(recording.status, "recording");
+  recorder.ondataavailable({ data: new Blob(["header"]) });
+  const stopped = f.client.stop();
+  assert.equal(f.audio.srcObject, null); assert.equal(f.media.released, true); assert.equal(f.peer.closed, true);
+  assert.equal(recording.status, "finalizing"); assert.equal(clone.stopped, true);
+  recorder.ondataavailable({ data: new Blob(["tail"]) }); recorder.onstop();
+  assert.equal(await recording.clip.blob.text(), "headertail");
+  cleanup.resolve({ ok: true, json: async () => ({ finalized: true }) }); await stopped;
+  await f.start(); assert.equal(recording.status, "ready");
+  await f.client.stop(); f.client.invalidate(); assert.equal(recording.manifest(), null);
+});
 test("provider receives the completed ICE offer; Stop also cancels gathering before creating a session", async () => {
   for (const stop of [false, true]) {
     const f = fixture(), waiting = deferred(); let changed;

@@ -49,6 +49,17 @@ and authoritative while the regulation layer develops.
 
 ## Bundled Clients
 
+### Disaster mission configuration prototype
+
+The `core.disaster_mission_configuration` agent captures inspection missions,
+requests missing details, recommends a physical embodiment and emits a reviewable
+JSON mission record. Incomplete or unsafe configurations cannot become ready;
+operator confirmation is tied to the current revision. Enable its key for a
+Valerian access code to try it. No physical execution is triggered. See the
+[demo instructions and safety limits](.doc/disaster-mission-configuration.md).
+The [DM-02 validation guide](.doc/dm02-validation.md) covers isolated local setup,
+real scoped API/database/browser checks and the explicitly deferred real-model gate.
+
 ### Valerian Access Management
 
 URL: `http://localhost:8080/valerian-admin/`
@@ -2366,7 +2377,42 @@ lifecycle failures still silence synchronously. No speculative buffering, VAD or
 playback timing change is included. Audible last-word clipping remains OPEN until
 a specific occurrence can be correlated with this evidence and physical listening.
 
-[Received-audio inspection plan](.agents/PLAN_CUTOFFINSPECTION.md) describes a
-future opt-in browser-local recording paired with this event trace. It is planned,
-not implemented; current telemetry contains no audio recording. The plan retains
-its original Gala trial evidence and references to files on the `agents` branch.
+### Optional received-audio inspection
+
+In the **GPT-Live** tab, expand **Received audio inspection** and choose
+**Arm next session** before starting Live or presence reception. Consent applies
+to one session only and is never saved in preferences. A new session or visitor
+does not re-arm it. Recording clones only the incoming assistant audio track;
+it does not open another microphone, reroute the speaker or change turn timing.
+
+**Stop recording** leaves Live running. **Stop GPT-Live** silences playback
+immediately while the recording finalizes independently. Wait for **Audio and
+telemetry ready to download**, then select **Download audio + telemetry**. Allow
+the browser to download both files if prompted. They share a recording ID and
+include a content-free manifest with actual MIME type, bytes, limits, times and
+the matching retained Live session. Ordinary Telemetry JSON includes recording
+metadata only, never the audio, transcript text or a Blob URL. Existing issue
+markers remain available for marking a perceived **Speech cut off** occurrence.
+
+Audio contains spoken content and stays in page memory until explicitly downloaded
+or discarded; it is not automatically uploaded, persisted or replayed. At most
+one clip is retained. Choose **Discard recording** before arming another. Agent
+switch/reset, logout and access revocation discard it and fence late callbacks.
+Ordinary Stop or visitor departure retains the clip for explicit download.
+Reload loses it. Supported browsers use their supported WebM/Opus, Ogg/Opus or
+MP4 audio format; unsupported/error states leave Live usable.
+
+Requested limits are ten minutes and 32 MiB, with best-effort recorder timeslices.
+Overflow, missing final data or recorder errors make the clip unavailable;
+encoded chunks are never truncated or header chunks evicted to fabricate a file.
+This is received-track capture before physical output, not acoustic loopback or
+provider-original audio. Encoder startup and chunk delivery introduce timing
+uncertainty: transcript offsets and recorder clocks do not align sample-exactly.
+Evicted/cleared session telemetry is marked incomplete, never replaced with a
+later session. A saved final word narrows the investigation to later playback;
+an absent word still does not isolate provider, transport or recorder faults.
+
+Implementation and acceptance status: [Cutoff inspection results](.agents/CUTOFF_INSPECTION_RESULTS.md).
+The [original plan](.agents/PLAN_CUTOFFINSPECTION.md) retains historical Gala
+evidence. The standalone Valerian repository has not been adapted. Physical
+cutoff diagnosis and a consenting operator trial remain separate acceptance.

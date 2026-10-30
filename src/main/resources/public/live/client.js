@@ -4,15 +4,17 @@ import { captureSummary } from "../transcription/settings.js";
 import { LiveCaptions } from "./captions.js";
 import { LiveAudioMonitor } from "./audio-diagnostics.js";
 import { LivePlaybackObserver } from "./playback-cue.js";
+import { receivedAudioRecording } from "./audio-recording.js";
 
 export class LiveClient {
   constructor({ audio, fetch = globalThis.fetch.bind(globalThis), createPeer = () => new RTCPeerConnection(),
     createMedia = onConflict => new TranscriptionMedia({ lease: new MicrophoneLease({ onConflict }) }),
     createOutputLease = (agentId, onConflict) => new OutputLease({ agentId, onConflict }),
     onState = () => {}, onCaptions = () => {}, onHistory = () => {}, onLedger = () => {}, onDiagnostic = () => {},
-    pollMs = 1000, timeoutMs = 20000 } = {}) {
+    recording = receivedAudioRecording, pollMs = 1000, timeoutMs = 20000 } = {}) {
     Object.assign(this, { audio, fetch, createPeer, createMedia, createOutputLease, onState, onCaptions, onHistory, onLedger, onDiagnostic, pollMs, timeoutMs });
     this.current = null; this.state = "Idle"; this.closing = null; this.generation = 0;
+    this.recording = recording;
   }
   get active() { return !!this.current; }
   get busy() { return this.active || !!this.closing; }
@@ -30,6 +32,7 @@ export class LiveClient {
     } catch (_) { /* Observability cannot interrupt speech or prevent local cleanup. */ }
   }
   invalidate(reason = "Agent connection changed.") {
+    this.recording.discard();
     const closing = this.stop(reason, "Idle", "scope_change"); this.generation++; this.status("Idle", reason); return closing;
   }
   async gatherIce(run) {
@@ -74,6 +77,7 @@ export class LiveClient {
     if (this.busy) throw new Error("Wait for the previous voice session to stop.");
     if (!agentId || !accessCode) throw new Error("Connect an agent first.");
     const run = { agentId, accessCode, muted: false, generation: ++this.generation, captions: new LiveCaptions(), ledgerKey: "", stopped: false };
+    this.recording.begin(run);
     this.current = run; this.status("Connecting", "Preparing microphone and speaker…"); this.onCaptions(run.captions.snapshot());
     run.audioMonitor = new LiveAudioMonitor(this.audio, value => this.diagnostic(run, { ...value, browserMs: performance.now() }));
     run.playback = new LivePlaybackObserver(this.audio, cue => {
@@ -104,6 +108,7 @@ export class LiveClient {
       run.peer.ontrack = event => {
         if (this.current !== run) return;
         this.audio.srcObject = event.streams[0] || new MediaStream([event.track]);
+        this.recording.received(run, event.track || this.audio.srcObject.getAudioTracks?.()?.[0]);
         run.playback.stream(this.audio.srcObject);
         if (event.track) run.audioMonitor.track(event.track, "output");
         this.diagnostic(run, { phase: "output_track" });
@@ -202,6 +207,7 @@ export class LiveClient {
     run.audioMonitor.playback("local_stop"); run.audioMonitor.close();
     run.playback.close();
     run.media?.release(); run.output?.release(); clearInterval(run.timer);
+    this.recording.end(run, reason);
     run.channel?.close(); run.peer?.close();
     run.cancelStartup?.();
     run.cancelGathering?.();

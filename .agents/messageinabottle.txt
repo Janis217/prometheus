@@ -1,24 +1,55 @@
 Before doing project work:
 
 1. Read `.agents/CODEX.md` for reusable engineering and milestone practices.
-2. Read `.agents/CONTEXT.MD` for PROMETHEUS's purpose, architecture, current
-   capabilities, known gaps, and project-specific boundaries.
-3. Read `PROJECT.md` from the beginning through `Current milestone state`, then
-   stop before `Historical milestones checklist`. Do not read the historical
-   audit end to end unless the task depends on an earlier decision; search it
-   selectively instead.
-4. Check the active branch and worktree, then inspect the README sections,
-   implementation, configuration, and neighboring tests relevant to the task.
+2. Read `.agents/DISASTER_MISSION_CONTEXT.md` for the disaster mission prototype scope,
+   architecture constraints, and repo context.
+3. Read `.agents/PLAN_DISASTER_MISSION.md` for the milestone goal, state flow, output schema,
+   and acceptance criteria.
+4. Read the relevant existing implementation patterns in:
+   - `src/main/java/ch/zhaw/prometheus/agentdefs/AgentDefinition.java`
+   - `src/main/java/ch/zhaw/prometheus/agentdefs/core/FacialExpressionSensitivity.java`
+   - `src/main/java/ch/zhaw/prometheus/agentdefs/core/ValerianCoreAgentFactory.java`
+   - `src/main/java/ch/zhaw/prometheus/controllers/ScopedDemoController.java`
+5. Check the active branch and worktree, then inspect the neighboring tests relevant to the task.
 
-Before proposing or making changes, give a concise mental model and identify
-the specific existing patterns, files, and tests that should guide the work. Do
-not restate the documentation at length.
+Scope for this milestone:
 
-If I provide a milestone goal, define a focused scope and implement it end to
-end with the smallest high-value test set and required documentation updates.
-Preserve existing architecture and user changes, and do not revert unrelated
-work.
+Implement the first PROMETHEUS disaster mission configuration prototype in the existing repo,
+not as a separate project.
 
-When the milestone is complete, report what changed, what was actually
-verified, and any remaining risks or unverified areas. Then stop so I can review
-and commit.
+Goal:
+Create a new core agent that behaves like a structured mission-configurator for disaster response.
+The prototype should capture a mission, ask for missing critical information, recommend a physical
+AI embodiment, identify safety conditions and approval needs, and return an execution-ready mission brief.
+
+The implementation must follow the existing repo pattern for core agents and stay intentionally narrow.
+Do not build a broad emergency system or a generic chatbot; keep the first milestone demonstrable and state-machine driven.
+
+Required work:
+
+1. Add a new agent definition in the existing core agentdefs package.
+2. Use the same pattern as the current single-state demo agents.
+3. Define a weather/fire/search/rubble style mission configuration flow with a small, structured prompt set.
+4. Ensure the agent can:
+   - capture mission objective, urgency, and location
+   - ask for missing critical facts
+   - choose a likely embodiment (drone, ground robot, dog robot, humanoid, or unknown)
+   - define constraints, required perception, required behavior, and first action
+   - block unsafe or incomplete missions until approval or clarification is available
+5. Produce a structured final output that can be inspected and reviewed, not just free-form text.
+6. Add the smallest meaningful validation: success path, missing-info path, and unsafe/guard path.
+7. Keep the implementation aligned with the existing Valerian demo architecture and access-code flow.
+
+Do not introduce unrelated architecture changes or broad refactors.
+
+Before proposing or making changes, give a concise mental model and identify the specific
+existing patterns, files, and tests that should guide the work. Then implement the smallest
+coherent change and verify it with targeted tests.
+
+When the milestone is complete, report:
+- what changed
+- what was actually verified
+- any remaining risks or unverified areas
+- what extension should happen next
+
+Then stop so I can review and commit.

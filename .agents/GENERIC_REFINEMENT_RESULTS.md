@@ -2,6 +2,57 @@
 
 Plan: [Generic multimodal refinement](PLAN_GENERIC_REFINEMENT.md).
 
+## Chronological backlog review (2026-10-30)
+
+Outcome: existing stages 208-213 are already implemented. The new repo-local
+checklist incorrectly left Generic Refinement unchecked. Reconciled its status
+and added a detailed entry, preserving the historical evidence below. No runtime
+rewrite, policy migration, new test fixture, deployment or data mutation was needed.
+The existing focused tests already protect the requested behavior.
+
+Implementation inspected: GenericMultimodalBehaviour, TaskPolicy, task unit and
+lifecycle tests, and GenericPolicyUpgradeService. Existing Core factory,
+AgentDefinition and scoped Valerian controller remain the extension boundaries.
+
+Commands actually executed in this review:
+
+```powershell
+$env:JAVA_HOME = 'C:/Program Files/Java/jdk-21'
+& 'C:/Users/StartKlar/.m2/wrapper/dists/apache-maven-3.9.12/6068d197/bin/mvn.cmd' -o -q '-Dtest=GenericMultimodalTaskUnitTest,TaskLifecycleUnitTest' test
+node tests/js/performance/activity.test.mjs
+```
+
+Results: 17 Generic task tests and 10 lifecycle tests passed with no failures,
+errors or skips; 7 activity-footer tests passed. Maven uses the installed cached
+distribution, avoiding a wrapper download. Evidence:
+
+- `target/generic-refinement-recheck.log`
+- `target/surefire-reports/ch.zhaw.prometheus.model.task.GenericMultimodalTaskUnitTest.txt`
+- `target/surefire-reports/ch.zhaw.prometheus.model.task.TaskLifecycleUnitTest.txt`
+- `target/generic-refinement-activity-recheck.log`
+
+The initial Maven attempt on local JDK 25 passed all 17 Generic tests but failed
+one lifecycle test during Mockito instrumentation: this Byte Buddy version
+supports at most Java 24. Switching only the process-local JAVA_HOME to the
+project's Java 21 runtime resolved it, without changing dependencies. The initial
+`node --test tests/js/performance/activity.test.mjs` launcher failed with spawn
+EPERM in the sandbox. Direct execution of the same node:test file passed all 7.
+
+Coverage: neutral prompts and saved-policy fingerprint; draft/activation and
+sensor-driven completion; freshness/confidence/duplicate guards; stop/reset;
+invalid configurations and provider failures; WAIT versus PAUSE/RESUME versus
+terminal completion; response boundaries; session-loss fencing; content-free
+failure reporting; footer acceptance/waiting/pause and scope handling.
+
+Remaining risks: inference is mocked in this recheck; database migration/reload,
+browser visuals, provider interpretation, current deployment health and physical
+camera/audio/latency checks were not rerun. Earlier evidence remains historical,
+not new acceptance. No physical playback claim follows from captions.
+
+Next: hand off this completed backlog review, then review GPTLive as the next
+open entry. GitHub issue creation was skipped because repo-local tracking records
+issues as disabled. No commit, push or deployment was requested or performed.
+
 ## Milestone 208
 
 Completed. Production guidance uses neutral schema descriptions and no preset

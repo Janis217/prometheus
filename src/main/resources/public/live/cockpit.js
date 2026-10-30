@@ -2,6 +2,7 @@ import { interactionActivity } from "../performance/activity.js";
 import { LiveClient } from "./client.js";
 import { PresenceReception } from "./reception.js";
 import { liveDiagnostics } from "./diagnostics.js";
+import { mountRecordingControls } from "./recording-controls.js";
 import { sanitizeMediaPreferences, captureSummary } from "../transcription/settings.js";
 
 const PREFERENCES = "prometheus.valerian.gptlive.preferences.v1";
@@ -32,6 +33,7 @@ export class LiveCockpit {
     $("gptlive_mute").addEventListener("click", () => void this.client.mute());
     $("gptlive_refresh").addEventListener("click", () => void this.devices());
     for (const id of ["voice", "input", "output", "echo", "noise", "gain"]) $("gptlive_" + id).addEventListener("change", () => this.save());
+    this.recordingControls = mountRecordingControls($("gptlive_recording"), () => this.busy || this.starting || !this.scope.agentId);
     this.controls();
   }
   get active() { return this.client.active; }
@@ -104,6 +106,7 @@ export class LiveCockpit {
     this.controls(); this.onLifecycle(value);
   }
   controls() {
+    this.recordingControls?.();
     const busy = this.busy || this.starting;
     $("gptlive_start").disabled = busy || !this.scope.agentId || !this.capability.enabled || !this.capability.eligible;
     $("gptlive_start").textContent = this.scope.interactionProfile?.presenceControlledLive ? "Start reception"

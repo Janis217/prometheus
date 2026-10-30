@@ -2102,6 +2102,19 @@
                   <div class="d-flex flex-wrap gap-2 mt-2 small text-muted">
                     <span id="gptlive_input_activity">Microphone idle</span>
                   </div>
+                  <details id="gptlive_recording" class="mt-3 small" data-testid="gptlive-recording">
+                    <summary>Received audio inspection</summary>
+                    <p class="mt-2 mb-2">Record received assistant audio locally for the next session only.
+                      This contains spoken content and is not uploaded automatically. Maximum 10 minutes / 32 MiB.
+                      It records received audio before speaker playback, not physical audibility.</p>
+                    <div class="d-flex flex-wrap gap-2 mb-2">
+                      <button class="btn btn-outline-ink btn-sm" type="button" data-recording-arm>Arm next session</button>
+                      <button class="btn btn-outline-ink btn-sm" type="button" data-recording-stop disabled>Stop recording</button>
+                      <button class="btn btn-outline-ink btn-sm" type="button" data-recording-download disabled>Download audio + telemetry</button>
+                      <button class="btn btn-outline-ink btn-sm" type="button" data-recording-discard disabled>Discard recording</button>
+                    </div>
+                    <p class="mb-0" data-recording-status role="status" aria-live="polite">Off</p>
+                  </details>
                   <audio id="gptlive_audio" hidden></audio>
                   <div class="surface-panel mt-3" data-testid="gptlive-captions">
                     <div class="metric-label mb-2">Transcript preview</div>

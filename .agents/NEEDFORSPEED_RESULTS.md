@@ -1,5 +1,24 @@
 # Need for speed: evidence record
 
+## Chronological backlog recheck (2026-10-30)
+
+Existing NFS software/offline acceptance is delivered. Current tests rechecked
+purpose routing, parallel guard ordering, speech-delivery timing and canonical
+playback with synthetic providers/clocks. No runtime replacement was needed.
+
+```powershell
+$env:JAVA_HOME = 'C:/Program Files/Java/jdk-21'
+& 'C:/Users/StartKlar/.m2/wrapper/dists/apache-maven-3.9.12/6068d197/bin/mvn.cmd' -o -q '-Dtest=InferenceRoutingUnitTest,ParallelGuardEvaluationUnitTest,SpeechDeliveryTimingServiceUnitTest' test
+node tests/js/speech/playback.test.mjs
+```
+
+Passed 11 Java cases (4 routing, 6 parallel guards, 1 timing) and 5 Node cases;
+zero failures/errors/skips. Logs: target/backlog-speed-java.log and
+target/backlog-speed-node.log; class reports are in target/surefire-reports.
+This is not a new benchmark, quality comparison, database/proxy/browser-device
+trial or proof of a two-second voice target. Historical evidence below remains
+historical; live/human/acoustic gates stay explicit. Next: Telemetry.
+
 ## Core-agent integration into main (2026-10-20)
 
 At the user's request, the reusable Social Space agent from `agents` commit

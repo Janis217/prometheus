@@ -1,5 +1,30 @@
 # Gala improvement implementation evidence
 
+## Main-checkout backlog audit (2026-10-30)
+
+Shared foundation verified; full Gala milestone remains open. This checkout has
+only main and origin/main refs and no PLAN_GALAIMPROVEMENT.md, Gala definitions
+or Gala-specific test suites. The historical sections below explicitly defer
+application-specific integration/acceptance to agents. Their shared unit results
+cannot establish full Gala acceptance. No deployment-only catalog was fabricated
+or imported, and no production or external branch was changed.
+
+Focused command actually run:
+
+```powershell
+$env:JAVA_HOME = 'C:/Program Files/Java/jdk-21'
+& 'C:/Users/StartKlar/.m2/wrapper/dists/apache-maven-3.9.12/6068d197/bin/mvn.cmd' -o -q '-Dtest=TaskFirstActionUnitTest,TaskResponseUnitTest,LiveShortReplyContextUnitTest' test
+```
+
+Passed 14 cases (4 first-action timing, 7 bounded response association, 3 short
+reply context), zero failures/errors/skips. Log: target/backlog-gala-java.log;
+per-class reports: target/surefire-reports. No database, paid provider, Gala
+persona/activity, physical audio or deployment trial occurred.
+
+The user explicitly deferred the missing Gala deployment scope on 2026-10-30 and
+authorized independent shared work in this checkout. Full Gala stays open; it
+does not block received-track inspection. See CUTOFF_INSPECTION_RESULTS.md.
+
 Roadmap: `.agents/PLAN_GALAIMPROVEMENT.md` on the agents branch. The user authorized
 consecutive milestones with a commit/push after each; final user physical trials
 are grouped at the end. Synthetic tests do not establish audibility or model compliance.

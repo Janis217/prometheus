@@ -1,5 +1,23 @@
 # Unified activity and telemetry evidence
 
+## Chronological backlog recheck (2026-10-30)
+
+Existing reporting/footer/export implementation and historical acceptance are
+present. No parallel reporting architecture or runtime rewrite was introduced.
+
+```powershell
+$env:JAVA_HOME = 'C:/Program Files/Java/jdk-21'
+& 'C:/Users/StartKlar/.m2/wrapper/dists/apache-maven-3.9.12/6068d197/bin/mvn.cmd' -o -q '-Dtest=AgentActivityServiceUnitTest,LatencyTraceUnitTest' test
+node tests/js/live/diagnostics.test.mjs
+```
+
+Passed 7 Java cases (3 activity and 4 latency) and 6 Node diagnostic export/privacy
+cases, with zero failures/errors/skips. Logs: target/backlog-telemetry-java.log,
+target/backlog-telemetry-node.log; Maven class reports: target/surefire-reports.
+The existing footer was also checked during the preceding Generic recheck (7
+Node cases). No new database/browser/production stream or physical audio trial.
+Historical rollout evidence below was not re-executed. Next: Transcribe.
+
 Plan: [PLAN_TELEMETRY.md](PLAN_TELEMETRY.md). User authorized sequential commits,
 pushes and final main -> agents deployment. No physical acoustic claim follows
 from synthetic provider/media tests.

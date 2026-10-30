@@ -90,7 +90,13 @@ milestone at a time:
 5. Run verification proportional to the change and fix failures.
 6. Update current project documentation and the engineering audit trail where
    required.
-7. Report the outcome, verification, and remaining risks, then stop for review.
+7. Synchronize the milestone status with the repo-local backlog in
+   `.agents/GITHUB_ISSUE_BACKLOG.md` before reporting completion. The backlog is
+   the project status reference when GitHub issues are disabled.
+8. Keep the checklist at the top of `.agents/GITHUB_ISSUE_BACKLOG.md` updated in
+   chronological order using `[x]` for completed milestones and `[ ]` for open
+   milestones.
+9. Report the outcome, verification, and remaining risks, then stop for review.
 
 Do not create commits or publish changes unless the user explicitly requests
 it.
@@ -146,13 +152,42 @@ and a pointer are sufficient.
   code could be improved.
 - Keep dependencies minimal and justify additions.
 
-## 8. Completion Handoff
+## 8. Milestone Completion and GitHub Issue Workflow
+
+When a milestone is complete, do not stop after implementation. Complete the repository handoff in the same task.
+
+Required workflow:
+
+1. Update the milestone result document in `.agents/` with the actual outcome, verification evidence, and remaining risks.
+2. Synchronize the milestone status in `.agents/GITHUB_ISSUE_BACKLOG.md` so the backlog stays aligned with the real project state. This file is the authoritative status tracker when GitHub issues are disabled.
+3. Update the chronological checkbox checklist at the top of the backlog before finishing the task. The checklist is the project overview; the detailed sections are the evidence and trail.
+4. Use the repository's handoff template and record:
+   - what changed;
+   - what was actually verified;
+   - remaining risks or unverified areas;
+   - what should be extended next.
+5. If GitHub access is available and the user has enabled issue tracking, create a GitHub issue for the milestone before reporting completion.
+6. The GitHub issue must include:
+   - milestone title;
+   - scope and outcome;
+   - verification summary;
+   - remaining risks;
+   - next steps.
+7. Close the issue as completed only after the milestone is actually implemented and the verification evidence is recorded.
+8. If GitHub access or permissions are unavailable, report that issue creation was skipped explicitly rather than implying it happened.
+9. For every milestone already implemented in this repository, create or update the corresponding backlog entry so the project history is preserved and completed work is not lost.
+
+This rule applies to all completed milestones, not only new work. Historical milestones that are already implemented should also be closed out in the issue tracker when the repo is set up for issue-based project hygiene.
+
+## 9. Completion Handoff
 
 Before declaring a milestone complete, confirm that:
 
 - the requested behavior is implemented;
 - relevant tests cover it and the reported verification passed;
 - required documentation is synchronized;
+- the milestone result handoff is updated;
+- a matching GitHub issue was created and closed when GitHub is available;
 - unrelated work remains untouched;
 - remaining risks, assumptions, and unverified areas are explicit.
 

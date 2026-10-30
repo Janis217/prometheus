@@ -1,5 +1,6 @@
 HELP.md
 target/
+.tmp_extract_pdf.py
 node_modules/
 playwright-report/
 test-results/

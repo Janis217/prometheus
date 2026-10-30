@@ -35,7 +35,7 @@ export class LiveDiagnostics {
   }
   record(value) {
     const handle = id(value.handle); if (!handle) return;
-    if (!this.sessions.has(handle)) this.sessions.set(handle, { handle, agentId: id(value.agentId), browser: [], browserDropped: 0,
+    if (!this.sessions.has(handle)) this.sessions.set(handle, { handle, agentId: id(value.agentId), generation: number(value.generation), browser: [], browserDropped: 0,
       media: [], mediaDropped: 0, finalization: "pending",
       clocks: { browser: "performance_now_ms", server: "unix_ms", provider: "audio_offset_ms", media: "media_element_ms", rtc: "webrtc_stats_ms" } });
     const entry = this.sessions.get(handle);

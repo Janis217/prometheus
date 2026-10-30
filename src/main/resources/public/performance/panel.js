@@ -1,7 +1,8 @@
 import { interactionActivity, mountActivity } from "./activity.js";
 import { turnTimings } from "./timings.js";
 import { liveDiagnostics } from "../live/diagnostics.js";
-import { METRICS, STAGE_LABELS, SERVER_LABELS, difference, measurements, outcome, timingExport, timingCsv } from "./report.js";
+import { telemetrySnapshot } from "./export.js";
+import { METRICS, STAGE_LABELS, SERVER_LABELS, difference, measurements, outcome, timingCsv } from "./report.js";
 
 const ms = value => Number.isFinite(value) ? `${value.toFixed(1)} ms` : "Unknown";
 
@@ -185,9 +186,7 @@ function mount() {
   buttons.forEach(button => button.addEventListener("click", () => {
     const turns = turnTimings.snapshot();
     const csv = button.dataset.timingExport === "csv";
-    const content = csv ? timingCsv(turns) : JSON.stringify({ ...timingExport(turns, {
-      userAgent: navigator.userAgent, timeOrigin: performance.timeOrigin,
-    }), live: liveDiagnostics.snapshot(), activity: interactionActivity.snapshot() }, null, 2);
+    const content = csv ? timingCsv(turns) : JSON.stringify(telemetrySnapshot(), null, 2);
     const url = URL.createObjectURL(new Blob([content], { type: csv ? "text/csv;charset=utf-8" : "application/json" }));
     const link = element("a");
     link.href = url;

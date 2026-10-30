@@ -75,6 +75,62 @@ and regulation diagnostics remain future work.
 
 ### Current milestone state
 
+- Disaster roadmap planning (2026-10-30): the repo-local backlog now lists open
+  DM-03 Platform Safety Constraints, DM-04 Supervisor Approval, DM-05 Simulation
+  Handoff and DM-06 Physical Embodiment Pilot with scope, dependencies and
+  acceptance criteria. DM-02's user-deferred real-model gate is separately visible
+  and required before operational handoff/physical pilot. These are planned
+  increments, not implemented features; no runtime or verification status changed.
+  The authoritative details are in `.agents/GITHUB_ISSUE_BACKLOG.md`.
+
+- DM-02 Disaster Mission End-to-End Validation (2026-10-30): automated scope
+  complete; user explicitly deferred real-model interpretation as an open gate.
+  Three scoped Java integration cases and six real HTTP/SSE/MySQL Valerian cases
+  passed, including explicit reconnect and displayed/stored JSON equality in
+  Live-enabled/disabled modes. Packaging passed. Dedicated MySQL 9.5 and random
+  test schemas/accounts stayed separate from installed service/production data;
+  cleanup verified and owned helper stopped. Production agent/API unchanged.
+  No model-quality, role authorization, physical safety or robot execution claim.
+  Evidence and repeatable setup: `.agents/DM02_RESULTS.md`, `.doc/dm02-validation.md`.
+
+- Shared Cutoff Inspection (2026-10-30): implemented one-session browser-local
+  received-track clone recording and paired telemetry exports without changing
+  playback/Stop authority. Passed 76 Live Node tests, 14 Java client contracts,
+  package verification and 27 distinct mocked browser cases across broad/focused
+  runs. Native Chrome/WebM-Opus export retained a late tone and silent tail;
+  desktop/mobile light/dark controls were inspected. CI-03 isolated app/MySQL
+  acceptance is pending because local PyMySQL/test database configuration are
+  absent, so Cutoff stays unchecked. Gala stays independently open/deferred.
+  No physical cutoff diagnosis, separate cockpit change or rollout. Evidence:
+  `.agents/CUTOFF_INSPECTION_RESULTS.md`.
+
+- Consecutive backlog review (2026-10-30): existing GPTLive, Need for Speed,
+  Telemetry, Transcribe and Connection Lifecycle software was rechecked in order
+  and its stale backlog status reconciled. Focused checks passed 87 Java tests on
+  JDK 21 and 33 Node tests across these five entries; no runtime rewrite or rollout
+  was needed. Physical/provider/performance gates remain separately unverified.
+  Shared Gala foundations passed another 14 Java tests, but full Gala stays open:
+  its deployment plan/catalog are absent from this main checkout. The user later
+  deferred Gala and authorized independent Cutoff Inspection above. Commands
+  and limitations are in their `.agents/*RESULTS.md` records and the backlog.
+
+- Chronological backlog review (2026-10-30): Generic Refinement stages 208-213
+  were already implemented; synchronized its stale unchecked backlog entry with
+  historical evidence. Current recheck passed 27 focused Java tests on JDK 21
+  and 7 Node activity tests. No runtime rewrite, migration or deployment.
+  GPTLive is the next open backlog review; database/provider/physical acceptance
+  was not rerun. See `.agents/GENERIC_REFINEMENT_RESULTS.md`.
+
+- Disaster Mission Configuration (2026-10-30): first repo-native prototype uses
+  the Core AgentDefinition/factory and one configuration state with a user-input
+  self-transition. A persisted JSON record exposes capture, blocked, approval and
+  ready phases, embodiment recommendations and revision-bound confirmation.
+  Three focused workflow tests cover success, missing-information completion,
+  unsafe guards, edits, extraction failures, storage limits and reset. Model
+  interpretation is mocked; supervisor identity, browser/persistence acceptance
+  and physical safety evidence remain unverified. See
+  `.agents/DISASTER_MISSION_RESULTS.md` and `.agents/GITHUB_ISSUE_BACKLOG.md`.
+
 - Live playback readiness (2026-10-28): output-audio deltas use PCM sample
   coverage rather than nonexistent provider timing fields. An expired,
   application-approved playback cue wakes ordinary runtime evaluation during

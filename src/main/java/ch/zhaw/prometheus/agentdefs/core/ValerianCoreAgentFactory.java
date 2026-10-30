@@ -30,6 +30,21 @@ final class ValerianCoreAgentFactory {
     private ValerianCoreAgentFactory() {
     }
 
+    static Agent disasterMissionConfiguration() {
+        Storage storage = new Storage();
+        ch.zhaw.prometheus.model.disaster.DisasterMission.reset(storage);
+        State configuration = new State("Disaster mission configuration",
+                new ch.zhaw.prometheus.model.disaster.DisasterMissionPolicy(storage), List.of());
+        configuration.addTransition(new Transition(new LatestEventTypeDecision(Event.TYPE_USER_UTTERANCE),
+                new ch.zhaw.prometheus.model.disaster.DisasterMissionAction(storage), configuration));
+        Agent agent = new Agent("Disaster Mission Configuration",
+                "Reviewable disaster inspection configuration; no physical execution.", configuration, storage);
+        agent.setInteractionProfile(AgentInteractionProfile.of(
+                List.of(AgentInteractionProfile.OBS_USER_UTTERANCE),
+                List.of(AgentInteractionProfile.MODALITY_SPEECH), List.of(TAG_VALERIAN_CORE, "demo.disaster_mission")));
+        return agent;
+    }
+
     record SignalDemoPrompts(String state, String starter, String toFinal, String outcomeExtraction,
             String finalPrompt) {
     }

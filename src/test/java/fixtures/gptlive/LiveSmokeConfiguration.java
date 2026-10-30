@@ -29,6 +29,8 @@ public class LiveSmokeConfiguration {
                 }
                 ch.zhaw.prometheus.logging.ActivityTrace.inference(request.requestId(), request.purpose().name(), "fixture-model", "low", 10, 5, 1);
                 String prompt = request.messages().stream().map(PromptMessage::getContent).reduce("", (a, b) -> a + "\n" + b);
+                if (request.purpose() == InferencePurpose.EXTRACTION && prompt.contains("Extract a disaster inspection mission"))
+                    return DisasterMissionFixture.extract(request.messages()).toString();
                 if (request.purpose() == InferencePurpose.EXTRACTION && prompt.contains("Determine whether the captured assistant speech fulfils")) {
                     var data = JsonParser.parseString(request.messages().getLast().getContent()).getAsJsonObject();
                     var result = new JsonObject();
@@ -60,7 +62,7 @@ public class LiveSmokeConfiguration {
             public boolean decide(List<PromptMessage> messages) {
                 return messages.stream().anyMatch(message -> message.getContent().contains("Return true if the person is clearly ready to start a round"));
             }
-            public JsonElement extract(List<PromptMessage> messages) { return new JsonObject(); }
+            public JsonElement extract(List<PromptMessage> messages) { return DisasterMissionFixture.extract(messages); }
             public JsonElement summarise(List<PromptMessage> messages) { return new JsonObject(); }
             public String summariseOffline(List<PromptMessage> messages) { return "Synthetic summary"; }
         };
