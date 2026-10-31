@@ -2,6 +2,20 @@
 
 Agent key: `core.disaster_mission_configuration`.
 
+Current approval requires an individually issued, scope-bound supervisor credential
+through the Valerian Mission supervisor review panel. `approve mission <revision>`
+in chat does not approve. Provisioning and review API: [supervisor review](mission-supervisor-review.md).
+
+DM-03 adds schema version 2 platformSafety: required checks, normalized operator
+declarations, unresolved reasons and status. Drone checks are communications,
+safeStandoff, platformSuitability, flightClearance and weatherEnvelope. Ground
+robots replace the last two with accessClearance/terrainSuitability; dog robots
+use structuralClearance/terrainSuitability. Each must be explicitly confirmed;
+unknown, malformed, missing or failed declarations prevent readiness. A generic
+safe statement supplies none of these checks. Declarations are not sensor proof.
+Mission changes clear prior affirmative declarations; supplying new declarations
+requires a subsequent safety reassessment before review. See `.agents/PLAN_DM03.md`.
+
 For isolated database-backed integration and real-cockpit validation, see
 [DM-02 validation](dm02-validation.md). The real-model trial remains a separate gate.
 
@@ -23,12 +37,15 @@ identifiers are preserved.
    "Map hotspots at the north warehouse, high priority. Open outdoor area; the
    search boundary is the fenced north perimeter. Smoke risk; observe only from
    a safe standoff. Clear visibility and low wind. Hazards and mitigations have
-   been assessed; drone suitability and flight clearance are confirmed."
+   been assessed; drone suitability and flight clearance are confirmed.
+   Communications and stop-on-lost-link, safe standoff and operation within
+   the drone weather envelope are explicitly confirmed."
 
 4. Supply missing details requested in `question`. Changes to existing mission
    details require a fresh safety assessment in a subsequent turn.
-5. Review the entire record and its conditions. Only the exact message
-   `approve mission <revision>` confirms the current revision.
+5. Load the current mission in Mission supervisor review, inspect every condition
+   and use a separately provisioned supervisor credential to Approve. Chat
+   confirmation cannot grant approval. Rejected/stale/unsafe reviews stay unready.
 
 The existing `/demo/agents`, `/acknowledge` and `/storage` endpoints are unchanged.
 The JSON record is also emitted verbatim as `speech`; there is no additional
@@ -50,21 +67,19 @@ generative closing response and no robot execution.
 - Existing storage allows 2048 characters per value. Oversized results are
   rejected and must be resubmitted as a shorter brief; safety details are not
   truncated.
-- Approvals are operator confirmations within the existing access control,
-  not authenticated supervisor role approvals. Hazard assessments and clearance
+- Approvals require an admin-issued reviewer identity/credential bound to the
+  access scope and current revision/safety reference. Hazard assessments and clearance
   information come from model-assisted interpretation of operator declarations;
   they are not verified physical safety checks.
 
 ## Verification
 
-Focused command: `mvn -Dtest=DisasterMissionConfigurationUnitTest,AgentDefinitionRegistryUnitTest test`.
-Three new workflow tests and six existing registry tests passed during initial implementation.
-Workflow tests cover success with revision-bound approval and JSON output,
-missing details, unsafe missions, edits, stale confirmations, extraction failures,
-malformed output, storage limits and reset.
-The language model is mocked in tests. Compilation used local JDK 25 with the
-existing Java 21 compiler target. Browser behavior, database round trips and
-actual model responses have not been tested.
+Current focused commands and evidence are in `.agents/DM03_RESULTS.md`,
+`.agents/DM04_RESULTS.md` and `.agents/DM05_RESULTS.md`. Use JDK 21. Unit guards,
+committed MySQL reload, scoped authorization and Valerian browser journeys are
+verified with deterministic extraction. Real-model interpretation and hardware
+remain unverified. The initial implementation record is preserved separately in
+`.agents/DISASTER_MISSION_RESULTS.md`.
 
-Next useful extension: authenticated supervisor approvals and explicit,
-platform-specific safety evidence, followed by browser and persistence tests.
+Next: review the [integrated simulator demonstration](disaster-fire-adapter.md),
+then address the explicitly deferred model gate and controlled physical pilot.

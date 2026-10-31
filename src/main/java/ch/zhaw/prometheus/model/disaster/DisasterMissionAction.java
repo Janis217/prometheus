@@ -12,6 +12,14 @@ public class DisasterMissionAction extends Action {
             Extract a disaster inspection mission, never act as a general chatbot.
             Return ONLY a JSON object with string fields missionType, objective, priority, location,
             environment, risks, operatingConditions, searchBoundary, safetyAssessment.
+            Also return platformEvidence: an object of requirement declarations, each confirmed, failed or unknown.
+            Common requirements: communications (stop on lost link), safeStandoff, platformSuitability.
+            outdoor_open adds flightClearance and weatherEnvelope;
+            indoor_flat adds accessClearance and terrainSuitability;
+            indoor_rubble adds structuralClearance and terrainSuitability.
+            confirmed requires explicit operator confirmation of that particular requirement;
+            conflicting, absent or ambiguous declarations are unknown; an explicit failure is failed.
+            Never infer all requirement confirmations from a generic safe declaration.
             Write all extracted text in English, translating operator input when necessary.
             Preserve proper names and location identifiers exactly.
             Use unknown for absent or uncertain facts. Never invent safety, boundaries or clearances.
@@ -36,11 +44,13 @@ public class DisasterMissionAction extends Action {
 
     @Override public void execute(EventHistory events, PolicyRuntime runtime) {
         if (events.isEmpty() || !Event.TYPE_USER_UTTERANCE.equals(events.toList().getLast().getType())) return;
+        String text = events.toList().getLast().getPayload().strip();
+        if (DisasterMissionSimulation.handle(getStorage(), text)) return;
         var previous = DisasterMission.current(getStorage());
         int revision = previous.get("revision").getAsInt();
-        String text = events.toList().getLast().getPayload().strip();
         if (text.equals("approve mission " + revision)) {
-            getStorage().put(DisasterMission.KEY, DisasterMission.evaluate(previous, revision, true));
+            var pending = DisasterMission.evaluate(previous, revision, false);
+            getStorage().put(DisasterMission.KEY, pending);
             return;
         }
         // Any edit or extraction failure revokes the previous approval before inference.
@@ -58,6 +68,11 @@ public class DisasterMissionAction extends Action {
             if (revision > 0 && DisasterMission.FIELDS.stream()
                     .filter(field -> !field.equals("safetyAssessment"))
                     .anyMatch(field -> !DisasterMission.text(previous, field).equals(DisasterMission.text(extractedDraft, field)))
+                    && !"unsafe".equals(DisasterMission.text(draft, "safetyAssessment"))) {
+                draft.addProperty("safetyAssessment", "unknown");
+                PlatformSafety.invalidate(draft);
+            } else if (revision > 0 && !PlatformSafety.declarations(previous).equals(
+                    PlatformSafety.evaluate(draft, DisasterMission.text(previous, "selectedEmbodiment")).getAsJsonObject("declarations"))
                     && !"unsafe".equals(DisasterMission.text(draft, "safetyAssessment"))) {
                 draft.addProperty("safetyAssessment", "unknown");
             }

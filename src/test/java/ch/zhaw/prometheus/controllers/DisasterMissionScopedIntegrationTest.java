@@ -27,6 +27,8 @@ class DisasterMissionScopedIntegrationTest {
     @Autowired ObjectMapper json;
     @Autowired AccessCodeAdminService admin;
     @Autowired AgentRepository agents;
+    @Autowired ch.zhaw.prometheus.repositories.AccessCodeRepository accessCodes;
+    @org.springframework.beans.factory.annotation.Value("${prometheus.admin.token}") String adminToken;
     private static final String HEADER = ScopedDemoController.ACCESS_CODE_HEADER;
 
     private String code() {
@@ -59,8 +61,23 @@ class DisasterMissionScopedIntegrationTest {
         String code = code(); UUID id = create(code);
         var draft = say(id, code, "Inspect hotspots at North Warehouse; hazards mitigated, drone suitability and flight clearance confirmed.");
         assertEquals("drone", draft.get("selectedEmbodiment").asText()); assertFalse(draft.get("ready").asBoolean());
+        assertEquals("satisfied", draft.get("platformSafety").get("status").asText());
+        assertEquals(5, draft.get("platformSafety").get("required").size());
         assertEquals(draft, stored(id, code));
         var ready = say(id, code, "approve mission 1");
+        assertFalse(ready.get("ready").asBoolean());
+        var scopeId = accessCodes.findByCode(code).orElseThrow().getId();
+        var credential = json.readTree(mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/admin/disaster/supervisors")
+                .header(AdminAccessCodeController.ADMIN_TOKEN_HEADER, adminToken).contentType(MediaType.APPLICATION_JSON)
+                .content(json.writeValueAsBytes(Map.of("scopeId", scopeId, "name", "DM fixture reviewer"))))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString());
+        var review = json.readTree(mvc.perform(get("/demo/agents/" + id + "/mission-review").header(HEADER, code))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        ready = json.readTree(json.readTree(mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post("/demo/agents/" + id + "/mission-review")
+                .header(HEADER, code).header(MissionReviewController.SUPERVISOR_HEADER, credential.get("token").asText())
+                .contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsBytes(Map.of("requestId", UUID.randomUUID(), "revision", 1,
+                        "reviewVersion", review.get("reviewVersion").asInt(), "safetyReference", review.get("safetyReference").asText(), "decision", "approve"))))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString()).get("mission").asText());
         assertTrue(ready.get("ready").asBoolean()); assertEquals(ready, stored(id, code));
         // Reload the full JPA graph, including the custom policy and action, outside a transaction.
         var reloaded = agents.findById(id).orElseThrow();
@@ -69,6 +86,7 @@ class DisasterMissionScopedIntegrationTest {
         mvc.perform(get("/demo/agents/" + id + "/storage").header(HEADER, code())).andExpect(status().isNotFound());
         var changed = say(id, code, "Move the inspection to South Warehouse");
         assertFalse(changed.get("ready").asBoolean()); assertEquals("unknown", changed.get("safetyAssessment").asText());
+        assertEquals("unresolved", changed.get("platformSafety").get("status").asText());
         assertEquals(changed, stored(id, code));
     }
     @Test void missingDetailsRemainIncompleteAfterApprovalAndReload() throws Exception {

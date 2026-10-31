@@ -31,6 +31,7 @@ public class PrometheusCorsConfiguration implements WebMvcConfigurer {
                         "Origin",
                         "X-Prometheus-Access-Code",
                         "X-Prometheus-Admin-Token",
+                        "X-Prometheus-Supervisor-Token",
                         "X-Prometheus-Trace-Id")
                 .exposedHeaders("Location", "X-Prometheus-Trace-Id", "X-Prometheus-Behaviour-Id", "X-Prometheus-Timing",
                         "X-Prometheus-Speech-Delivery-Id")

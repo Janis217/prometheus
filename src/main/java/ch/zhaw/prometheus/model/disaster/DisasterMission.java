@@ -18,7 +18,14 @@ public final class DisasterMission {
     }
 
     public static JsonObject current(Storage storage) {
-        return storage.get(KEY).getAsJsonObject().deepCopy();
+        var stored = storage.get(KEY).getAsJsonObject().deepCopy();
+        if (stored.has("schemaVersion") && stored.get("schemaVersion").getAsInt() >= 2
+                && !"operator_confirmed".equals(text(stored, "approvalState"))) return stored;
+        var result = evaluate(stored, stored.has("revision") ? stored.get("revision").getAsInt() : 0,
+                "supervisor_approved".equals(text(stored, "approvalState")));
+        if (List.of("supervisor_rejected", "supervisor_revoked").contains(text(stored, "approvalState")))
+            result.addProperty("approvalState", text(stored, "approvalState"));
+        return result;
     }
 
     public static void reset(Storage storage) { storage.put(KEY, evaluate(new JsonObject(), 0, false)); }
@@ -54,29 +61,32 @@ public final class DisasterMission {
             case "dog robot" -> "Uneven indoor rubble suggests a legged inspection platform, subject to structural clearance.";
             default -> "Clarify environment and access before selecting a platform.";
         });
-        result.add("constraints", Storage.toJsonElement(List.of("Stay within the confirmed search boundary",
-                "No contact rescue or autonomous entry into hazardous zones",
-                "Stop on lost communications, new hazards or changed operating conditions",
-                "Supervisor must confirm platform suitability, structural or flight clearance and safe standoff")));
-        result.add("requiredPerception", Storage.toJsonElement(type.equals("fire_hotspot_inspection")
+        result.add("constraints", Storage.toJsonElement(List.of("Stay within boundary; no contact rescue or hazardous entry",
+                "Stop on lost link, new hazards or changed conditions", "Supervisor review required")));
+        result.add("requiredPerception", Storage.toJsonElement(text(result, "objective").contains("printed fire indicator")
+                ? List.of("visual indicator detection", "visual obstacle detection") : type.equals("fire_hotspot_inspection")
                 ? List.of("thermal imaging", "visual obstacle detection", "smoke monitoring")
                 : List.of("visual obstacle detection", "terrain mapping", "person detection")));
         result.add("requiredBehavior", Storage.toJsonElement(List.of("perimeter survey", "map hazards", "report findings to supervisor")));
-        boolean unsafe = safety.equals("unsafe");
+        var platform = PlatformSafety.evaluate(input, embodiment);
+        result.add("platformSafety", platform);
+        boolean platformSatisfied = "satisfied".equals(text(platform, "status"));
+        boolean unsafe = safety.equals("unsafe") || "failed".equals(text(platform, "status"));
+        if (!platformSatisfied) addMissing(missing, "platformSafety");
         boolean ready = !unsafe && missing.isEmpty() && approved;
         String phase = unsafe ? "blocked" : !missing.isEmpty() ? "mission_capture"
                 : approved ? "execution_ready" : "safety_and_approval";
-        result.addProperty("schemaVersion", 1);
+        result.addProperty("schemaVersion", 2);
         result.addProperty("revision", revision);
         result.addProperty("phase", phase);
         result.addProperty("ready", ready);
         result.addProperty("approvalState", unsafe ? "blocked" : !missing.isEmpty() ? "not_requested"
-                : approved ? "operator_confirmed" : "awaiting_supervisor_approval");
+                : approved ? "supervisor_approved" : "awaiting_supervisor_approval");
         result.add("missingInformation", missing);
         result.addProperty("question", unsafe ? "Which hazards and protective measures must be clarified before reassessment?"
                 : !missing.isEmpty() ? "Please provide or clarify: " + missing
                 : approved ? "Configuration confirmed; no robot execution triggered."
-                : "Please review the mission and safety conditions. To confirm: approve mission " + revision);
+                : "Please obtain authenticated supervisor review for revision " + revision);
         result.addProperty("firstAction", ready ? "Survey perimeter from the approved safe standoff; report before any entry"
                 : "Hold position; clarify missing information and obtain approval");
         // Existing StorageEntry uses VARCHAR(2048); reject oversized briefs rather than truncate safety facts.

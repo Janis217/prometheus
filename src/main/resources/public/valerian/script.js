@@ -33,6 +33,15 @@ const state = {
 };
 
 const liveVoice = { ui: null };
+let missionReviewUi = null;
+async function ensureMissionReviewUi() {
+  if (!missionReviewUi) {
+    const { mountMissionReview } = await import("./mission-review.js");
+    missionReviewUi = mountMissionReview(document.getElementById("mission_review_panel"),
+      () => ({ agentId: state.agentId, accessCode: state.accessCode }));
+  }
+  missionReviewUi.clear();
+}
 
 async function initGptLive() {
   const { LiveCockpit } = await import("../live/cockpit.js");
@@ -1100,6 +1109,7 @@ async function connectToAgent(agentId) {
   cleanupStreams();
   resetCockpitColumns();
   state.agentId = selectedAgentId;
+  await ensureMissionReviewUi();
   globalThis.PrometheusActivity?.scope(selectedAgentId);
   document.getElementById("agent_id_input").value = selectedAgentId;
   document.getElementById("agent_select").value = selectedAgentId;
@@ -1139,6 +1149,7 @@ async function loadAgentInfo() {
     }
     const data = await response.json();
     state.agentInfo = data;
+    document.getElementById("mission_review_panel").hidden = !data.interactionProfile?.profileTags?.includes("demo.disaster_mission");
     document.getElementById("agent_info_name").textContent = prometheusFacingText(data.name, data.personaName) || "-";
     document.getElementById("agent_info_description").textContent = prometheusFacingText(
       data.description,
@@ -1167,6 +1178,8 @@ async function disconnectAgent(options = {}) {
   }
   cleanupStreams();
   state.agentId = null;
+  missionReviewUi?.clear();
+  document.getElementById("mission_review_panel").hidden = true;
   globalThis.PrometheusActivity?.scope(null);
   state.agentInfo = null;
   void configureGptLive();

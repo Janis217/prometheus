@@ -75,6 +75,43 @@ and regulation diagnostics remain future work.
 
 ### Current milestone state
 
+- Disaster software sequence (2026-10-31): DM-03 platform declarations, DM-04
+  individual scope-bound supervisor review, DM-05 local simulator handoff and
+  integrated DM-INT demonstrator are complete for their bounded software scopes.
+  Final verification passed 34 unit/client checks, 11 scoped MySQL integration
+  tests, 18 browser/replay cases and packaging; immutable snapshots, authenticated
+  review, escalation and access-scope handoff survive reload. Evidence:
+  `.agents/DM03_RESULTS.md`, `.agents/DM04_RESULTS.md`, `.agents/DM05_RESULTS.md`,
+  `.agents/DM_INT_RESULTS.md`. No operational handoff is accepted while the DM-02
+  real-model gate is deferred; DM-06 physical, Gala and Cutoff gates remain open.
+  The dedicated MySQL helper was cleaned up/shut down. No commit/push/deployment.
+
+- DM-03 platform safety (2026-10-31): complete for declarative software scope;
+  schema 2 requires all platform-specific declarations and exposes unresolved
+  reasons. Relevant changes invalidate prior checks. Passed 12 unit, 3 scoped
+  integration and 6 browser checks; see `.agents/DM03_RESULTS.md`. DM-04 individual
+  supervisor authorization and audit history are implemented, final verification
+  underway. Provider/hardware gates remain open; no physical proof is claimed.
+
+- DM-03 platform safety (2026-10-31): complete for declarative software scope;
+  schema 2 requires all platform-specific declarations and exposes unresolved
+  reasons. Relevant changes invalidate prior checks. Passed 12 unit, 3 scoped
+  integration and 6 browser checks; see `.agents/DM03_RESULTS.md`. DM-04 individual
+  supervisor authorization and audit history are implemented, final verification
+  underway. Provider/hardware gates remain open; no physical proof is claimed.
+
+- Disaster interaction work (2026-10-31): DM-UC bounded derivation is complete:
+  126 checked matrix intersections, six prioritized use cases and explicit
+  exclusions/traceability. DM-INT adds an isolated, command-driven fire-image
+  rehearsal within the existing mission agent, including persisted phase events,
+  escalation decisions, synthetic completion and separate handoff acknowledgement.
+  Full DM-INT remains open: authorized approval and a trusted adapter depend on
+  DM-03/DM-04/DM-05. The user authorized implementing those prerequisites first,
+  then integrated DM-INT acceptance, resolving the former ordering cycle without
+  changing acceptance criteria. DM-03/DM-04 are unstarted. See `.agents/DM_UC_RESULTS.md` and
+  `.agents/DM_INT_RESULTS.md` for actual verification and limitations. No model,
+  physical execution, supervisor authority or real responsibility transfer claim.
+
 - Disaster roadmap planning (2026-10-30): the repo-local backlog now lists open
   DM-03 Platform Safety Constraints, DM-04 Supervisor Approval, DM-05 Simulation
   Handoff and DM-06 Physical Embodiment Pilot with scope, dependencies and

@@ -54,12 +54,20 @@ and authoritative while the regulation layer develops.
 The `core.disaster_mission_configuration` agent captures inspection missions,
 requests missing details, recommends a physical embodiment and emits a reviewable
 JSON mission record. Incomplete or unsafe configurations cannot become ready;
-operator confirmation is tied to the current revision. Enable its key for a
+authenticated supervisor approval is tied to the current revision and safety review.
+Platform-specific declarations must all be resolved. Enable its key for a
 Valerian access code to try it. No physical execution is triggered. See the
 [demo instructions and safety limits](.doc/disaster-mission-configuration.md).
 The [DM-02 validation guide](.doc/dm02-validation.md) covers isolated local setup,
 real scoped API/database/browser checks and the explicitly deferred real-model gate.
-
+The [use-case derivation](.agents/PLAN_DM_USECASE_SYSTEMATICS.md) documents scenario,
+phase and deviation coverage. The [fire-image rehearsal](.doc/disaster-fire-demonstrator.md)
+adds deterministic simulation commands for coordination, escalation and handoff.
+That isolated rehearsal's confirmation is explicitly unauthenticated.
+The [approved fire-image adapter guide](.doc/disaster-fire-adapter.md) describes
+the integrated platform-check, authenticated-review, simulator, escalation and
+handoff flow. Simulation findings are synthetic; real-model and hardware gates
+remain separate. Supervisor credentials are individually provisioned per scope.
 ### Valerian Access Management
 
 URL: `http://localhost:8080/valerian-admin/`

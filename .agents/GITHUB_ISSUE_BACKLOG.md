@@ -25,9 +25,11 @@ The checklist at the top is the high-level milestone tracker. Codex must keep it
 - [ ] Cutoff Inspection
 - [x] DM-02: Disaster Mission End-to-End Validation (automated scope; model gate deferred)
 - [ ] DM-02 gate: Real-model interpretation validation (deferred)
-- [ ] DM-03: Platform Safety Constraints
-- [ ] DM-04: Supervisor Approval
-- [ ] DM-05: Simulation Handoff
+- [x] DM-UC: Use-case derivation systematics
+- [x] DM-INT: Interaction lifecycle demonstrator (authorized deterministic simulation)
+- [x] DM-03: Platform Safety Constraints
+- [x] DM-04: Supervisor Approval
+- [x] DM-05: Simulation Handoff (simulation software; operational model gate open)
 - [ ] DM-06: Physical Embodiment Pilot
 
 The checklist above is the summary view. The detailed milestone states and evidence follow below.
@@ -40,15 +42,26 @@ The user authorized consecutive milestone work on 2026-10-30 after the Generic
 handoff; continue in order without committing, pushing or deploying. Checkboxes
 record delivered software with explicit acceptance limits in each detailed entry.
 
-Disaster roadmap update (2026-10-30): DM-03 through DM-06 are planned future
-increments, added at the user's request. Their entries define scope, dependencies
-and acceptance; they do not claim implementation, test evidence or physical
-readiness. Detailed implementation plans should be refined when each increment
-starts, using the existing architecture. The separate DM-02 model gate remains
-open and does not reopen its completed automated scope. DM-03/DM-04 development
-and fixture-driven simulator development may proceed while that gate is deferred;
-operational handoff and the physical pilot require it to pass. Deferred Gala and
-Cutoff acceptance are independent of this disaster-specific sequence.
+Disaster roadmap update (2026-10-31): dozent feedback is now represented as
+explicit planning milestones before execution-heavy increments. DM-UC and DM-INT
+cover methodical use-case derivation plus mission interaction lifecycle coverage
+(initiation, configuration, coordination, escalation, handoff). Their outputs
+become required planning inputs for DM-03 through DM-06. The separate DM-02
+model gate remains open and does not reopen completed automated scope.
+DM-03/DM-04 development and fixture-driven simulator development may proceed
+while that gate is deferred; operational handoff and physical pilot require it
+to pass. Deferred Gala and Cutoff acceptance remain independent.
+Planning entry point for this sequence: `.agents/PLAN_DM_IMPLEMENTATION_PLANNING.md`.
+
+Dependency-order correction authorized by the user (2026-10-31): execute
+DM-03 -> DM-04 -> DM-05 -> integrated DM-INT acceptance -> DM-06, following
+the completed DM-UC and verified DM-INT rehearsal. The chronological checklist
+and milestone IDs above remain stable; this explicit prerequisite order governs
+execution. DM-INT completion is not a prerequisite for implementing DM-03/04/05.
+Its existing contract/use-case artifacts are planning inputs, not a closure gate.
+All acceptance criteria and provider/hardware gates remain unchanged. No open
+milestone is completed merely by this correction. Evidence:
+`.agents/DM_DEPENDENCY_ORDER_RESULTS.md`.
 
 ## 1. Capability Awareness Completion
 
@@ -350,6 +363,12 @@ Scope:
 - Keep secrets and personal mission data out of committed evidence. Establish a
   request/cost cap before execution; no automatic retry-until-pass.
 
+Implementation work packages:
+- [ ] Freeze and review interpretation corpus with expected extraction outcomes.
+- [ ] Execute bounded real-model trial with explicit request/cost cap.
+- [ ] Re-run guard checks for unsafe/incomplete/stale approval outcomes.
+- [ ] Record interpretation failures/limits in `.agents/DM02_RESULTS.md`.
+
 Acceptance:
 - Required facts and unknowns match the corpus; the model cannot grant approval.
 - Unsafe/incomplete results remain blocked by backend guards; an edit revokes the
@@ -362,15 +381,125 @@ No new evidence or billing is claimed by this planning update.
 Gate: must pass before operational handoff/physical pilot; fixture-only simulator
 development and deterministic safety/authorization work may proceed independently.
 
-## 13. DM-03: Platform Safety Constraints
+## 13. DM-UC: Use-case derivation systematics
 
-Status: open/planned; implementation not started.
+Status: closed (2026-10-31); bounded design scope verified, human review pending.
+
+Depends on: existing Disaster Mission configuration evidence and dozent feedback.
+
+Goal: establish a reproducible and reviewable method that derives mission
+interaction use cases with bounded scope rather than ad-hoc scenario selection.
+
+Scope:
+- Define a three-axis matrix for derivation:
+  scenarios (fire indication, person/animal search, route documentation),
+  interaction phases (initiation, configuration, approval, coordination,
+  escalation, completion/handoff), and deviations (missing info, unclear target,
+  capability gap, obstacle, connection loss, operator abort).
+- Derive a bounded baseline set of use cases from matrix coverage, including
+  at least one ordinary and one challenging case per selected scenario.
+- Record explicit in-scope and out-of-scope boundaries for this semester scope,
+  including mobility as a risk/dependency instead of a prerequisite blocker.
+- Define traceability IDs so every derived use case can map to implementation
+  milestones, tests and demonstrator evidence.
+
+Out of scope: proving absolute completeness for all disaster operations,
+robot-control execution and production deployment readiness.
+
+Implementation work packages:
+- [x] Write the derivation procedure and coverage criteria in a dedicated plan.
+- [x] Build the matrix with scenario/phase/deviation intersections.
+- [x] Derive prioritized use cases and challenging variants from matrix coverage.
+- [x] Define exclusions, assumptions and open dependencies.
+- [x] Publish traceability IDs consumed by DM-INT through DM-06.
+
+Acceptance:
+- The method is reproducible by another team member without oral context.
+- Every prioritized use case has a traceability ID and phase coverage mapping.
+- Scope boundaries and intentionally unimplemented areas are explicit.
+
+Verification: document review plus consistency check against backlog milestones.
+Plan: `.agents/PLAN_DM_USECASE_SYSTEMATICS.md`.
+Evidence: `.agents/DM_UC_RESULTS.md`. Ran
+`python tests/disaster/check_usecase_traceability.py`: exit 0, 126 unique cells,
+six use cases, all five DM-INT packages and DR-01..DR-05 mappings checked.
+No independent teammate reproduction or team/lecturer approval is claimed.
+
+Use-case consumers for DM-INT through DM-06: UC-FIRE-01 and UC-FIRE-02 are
+the first slice; UC-ROUTE-01, UC-ROUTE-02, UC-SEARCH-01 and UC-SEARCH-02 are
+deferred requirements. The matrix and traceability map preserve these IDs
+without expanding the fire-first implementation scope of later milestones.
+
+## 14. DM-INT: Interaction lifecycle demonstrator
+
+Status: closed for the authorized deterministic simulator demonstrator (2026-10-31).
+Real-model quality, operational handoff and physical readiness are not claimed.
+
+Dependency correction authorized 2026-10-31: implement DM-03/DM-04/DM-05 before
+full DM-INT acceptance. The former completion-first cycle is resolved by order,
+not reduced scope. Simulation rehearsal cannot establish authenticated approval
+or operational handoff. Original simulator-demonstrator criteria are now verified
+after implementing DM-03/DM-04/DM-05; the model and physical gates remain separate.
+
+Depends on: DM-UC output and current DM-02 automated acceptance baseline.
+
+Goal: deliver a full mission interaction flow demonstrator that emphasizes
+coordination, escalation and completion/handoff around execution, matching
+dozent priorities before deep autonomy investment.
+
+Use cases: UC-FIRE-01 ordinary and UC-FIRE-02 challenging; DR-02 through DR-05.
+
+Scope:
+- Use the fire-image-in-room scenario as the first vertical demonstrator.
+- Cover end-to-end interaction phases:
+  initiation -> configuration -> approval -> coordination -> escalation ->
+  completion/handoff.
+- Use a simulated executor/handoff adapter first; preserve deterministic
+  execution states and avoid claiming physical autonomy.
+- Ensure progress, escalation decisions and final handoff artifacts are visible
+  in persisted mission output and UI/API responses.
+
+Out of scope: autonomous exploration quality claims, broad mission families,
+and unsupervised physical dispatch.
+
+Implementation work packages:
+- [x] Define state and message contract for coordination updates.
+- [x] Define escalation triggers and operator decision loops.
+- [x] Define completion package (result evidence, location/status, responsibility handoff).
+- [x] Implement one demonstrator journey with ordinary and challenging variants.
+  Integrated platform checks, individually authenticated approval and local adapter verified.
+- [x] Add focused tests and scripted demo steps for repeatability.
+  Unit, committed API/MySQL, Valerian ordinary/obstacle and replay acceptance pass.
+
+Acceptance:
+- One demonstrator journey runs through all six interaction phases.
+- At least one escalation path is exercised and resolved by operator decision.
+- Completion/handoff emits structured evidence and ownership transfer state.
+
+Verification: focused integration/browser tests plus reproducible scripted demo.
+Plan: `.agents/PLAN_DM_INTERACTION_LIFECYCLE.md` and `.agents/PLAN_DM_DEMONSTRATOR_FIRE.md`.
+Evidence: `.agents/DM_INT_RESULTS.md`; runtime contract and executable walkthrough
+are linked from the existing lifecycle/fire plans. All simulation outputs are
+labeled; no provider, hardware, supervisor authorization or operational handoff
+validation is claimed by the earlier rehearsal. Integrated completion evidence:
+DM_INT_RESULTS.md addendum, DM03_RESULTS.md, DM04_RESULTS.md and DM05_RESULTS.md.
+Final run passed 34 focused unit/client checks, 11 integration tests and 18 browser
+cases, plus packaging. New adapter UI/replay guide: .doc/disaster-fire-adapter.md.
+Synthetic execution is labelled; operational handoff still requires the separate
+deferred real-model gate and physical pilot acceptance where applicable.
+
+## 15. DM-03: Platform Safety Constraints
+
+Status: closed for declarative software scope (2026-10-31); no physical proof claimed.
 
 Depends on: DM-02 automated scope. The deferred model trial is not a prerequisite
 for implementing deterministic constraints and their tests.
 
 Goal: make embodiment-specific safety requirements explicit and reviewable in the
 existing mission record rather than treating a generic safety declaration as proof.
+
+Use cases: UC-FIRE-01/UC-FIRE-02 first; route/search are deferred requirement
+consumers in `PLAN_DM_TRACEABILITY.md`, not additional acceptance scenarios.
 
 Scope:
 - Start with the inspection embodiments currently recommended by the agent:
@@ -382,6 +511,13 @@ Scope:
   structured mission output. Missing or conflicting evidence prevents readiness.
 - Reuse the existing agent action/policy/storage path and invalidate prior review
   when the embodiment, conditions or relevant evidence changes.
+
+Implementation work packages:
+- [x] Define embodiment requirement schema and unresolved-check semantics.
+- [x] Implement requirement evaluation and fail-closed readiness guards.
+- [x] Invalidate prior safety review on relevant mission changes.
+- [x] Persist/reload requirement status in scoped mission output.
+- [x] Add focused rule/guard and persistence verification tests.
 
 Out of scope: platform control, automatic certification of physical safety,
 authenticated supervisor roles, extra mission families or a generic rule engine.
@@ -395,17 +531,22 @@ Acceptance:
 
 Verification: focused Java rule/guard tests and one scoped persistence/output
 recheck. No physical-safety claim follows from fixture evidence.
-Planned evidence: .agents/DM03_RESULTS.md (create when implementation starts).
+Evidence: .agents/DM03_RESULTS.md. 12 focused unit, 3 scoped Java integration
+and 6 Valerian browser checks passed; exact commands and retained failure noted.
+All model outputs are fixtures; declarations are not sensor proof or certification.
 Next dependency: DM-04 consumes these explicit safety results.
 
-## 14. DM-04: Supervisor Approval
+## 16. DM-04: Supervisor Approval
 
-Status: open/planned; implementation not started.
+Status: closed for bounded demo authorization scope (2026-10-31).
 
 Depends on: DM-03 safety requirements and DM-02 scoped/persistence acceptance.
 
 Goal: replace unauthenticated operator confirmation as the authorization gate
 with an identifiable supervisor decision bound to the current mission revision.
+
+Use cases: UC-FIRE-01/UC-FIRE-02; replace simulation confirmation with actual
+authorized review, retaining the use-case traceability baseline.
 
 Scope:
 - Inspect existing authentication/access-control boundaries and choose the smallest
@@ -416,6 +557,13 @@ Scope:
   and time in a persistent, reviewable history with explicit rejection/revocation.
 - Preserve scope isolation, reject stale decisions, and revoke approval on relevant
   mission changes. Keep ordinary operator capture/clarification available.
+
+Implementation work packages:
+- [x] Select minimal supervisor identity and permission integration point.
+- [x] Implement revision-bound supervisor approval and rejection flow.
+- [x] Add revocation and stale-decision protections.
+- [x] Persist auditable approval history with identity and timestamp.
+- [x] Add scoped API/database plus Valerian authorization journey checks.
 
 Out of scope: an organization-wide IAM system, physical dispatch or simulator control.
 
@@ -429,12 +577,16 @@ Acceptance:
 
 Verification: focused authorization/revision tests, scoped API/database integration
 and one Valerian review journey. Provider wording cannot establish authorization.
-Planned evidence: .agents/DM04_RESULTS.md (create when implementation starts).
+Evidence: .agents/DM04_RESULTS.md. 12 unit, 8 committed integration, 12 browser
+and 18 CORS/static-client checks passed. Individual admin-provisioned, scope-bound
+reviewer credentials and single-process CAS are verified; enterprise identity,
+distributed operation, provider quality and physical safety are not claimed.
 Next dependency: DM-05 consumes an approved immutable mission revision.
 
-## 15. DM-05: Simulation Handoff
+## 17. DM-05: Simulation Handoff
 
-Status: open/planned; implementation not started.
+Status: closed for simulation software (2026-10-31); operational/model gate remains
+open. No operational handoff is accepted by this milestone evidence.
 
 Depends on: DM-03 and DM-04. The DM-02 model gate must pass before accepting
 model-derived missions for operational handoff. Simulator development may use
@@ -442,6 +594,9 @@ explicit deterministic fixtures while that gate remains open.
 
 Goal: hand one approved inspection mission to a simulator and inspect its lifecycle
 without connecting or commanding physical hardware.
+
+Use cases: UC-FIRE-01/UC-FIRE-02; the DM-INT command rehearsal is not this
+trusted adapter or its acceptance evidence.
 
 Scope:
 - Choose one simulator and one narrow inspection scenario when implementation
@@ -452,6 +607,13 @@ Scope:
   structured feedback, maintaining the separation of configuration and execution.
 - Bound timeouts and handle duplicate/out-of-order feedback without duplicate starts
   or false completion. Keep the mission trace reviewable in the existing workflow.
+
+Implementation work packages:
+- [x] Select simulator and define adapter contract for one inspection scenario.
+- [x] Implement immutable revision handoff with execution identity.
+- [x] Map progress/failure/cancel/timeout feedback into mission trace events.
+- [x] Add idempotency and out-of-order feedback protections.
+- [x] Add reproducible simulator acceptance journey and verification tests.
 
 Out of scope: multiple simulator backends, autonomous rescue operations, a broad
 robot-control platform or any physical execution.
@@ -466,10 +628,16 @@ Acceptance:
 
 Verification: focused adapter/lifecycle tests and one reproducible simulator journey
 with captured structured output. Simulator selection/setup remains an open choice.
-Planned evidence: .agents/DM05_RESULTS.md (create when implementation starts).
+Evidence: .agents/DM05_RESULTS.md. Local in-process FireImageSimulator chosen;
+34 focused unit/client checks, 11 scoped integration tests, 18 browser/replay
+cases and packaging passed. All five software work packages complete. Model
+interpretation remains the separate deferred DM-02 gate; the acceptance condition
+above is retained and no operational/physical handoff is claimed. Deadlines are
+checked on read/update; this is not a physical watchdog. Handoff records a scope,
+not legal human responsibility. Artifacts: target/gptlive-acceptance-c84c63a264/.
 Next dependency: DM-06 reuses the validated handoff contract for one chosen platform.
 
-## 16. DM-06: Physical Embodiment Pilot
+## 18. DM-06: Physical Embodiment Pilot
 
 Status: open/planned; implementation not started.
 
@@ -478,6 +646,9 @@ authorization and a passed DM-02 real-model gate.
 
 Goal: validate one bounded inspection task on one explicitly selected physical
 platform under operator supervision in a controlled test area.
+
+Use cases: UC-FIRE-01/UC-FIRE-02 only after simulator, safety, authorization and
+model gates; route/search physical trials are deferred extensions.
 
 Scope:
 - Select the platform, capabilities, test location, operational limits and responsible
@@ -488,6 +659,13 @@ Scope:
   and cancellation for that platform. Keep physical observations separate from
   model declarations and simulator results.
 - Record the operator procedure, actual configuration, observed outcomes and deviations.
+
+Implementation work packages:
+- [ ] Finalize hardware platform envelope, operator procedure and test boundaries.
+- [ ] Implement minimal platform adapter for agreed inspection behavior only.
+- [ ] Verify preflight, emergency stop, communication-loss and cancel flows.
+- [ ] Execute supervised pilot and capture observed physical evidence.
+- [ ] Record deviations and closure decision in `.agents/DM06_RESULTS.md`.
 
 Out of scope: unsupervised disaster deployment, contact rescue, multiple platforms,
 general navigation autonomy or safety certification claims.

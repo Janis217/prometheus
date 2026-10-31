@@ -1,7 +1,9 @@
 # DM-02: repeatable mission validation
 
 DM-02 validates the existing mission agent through the scoped API, actual MySQL
-persistence and Valerian. It does not add robot execution or supervisor roles.
+persistence and Valerian. It originally did not add robot execution or supervisor roles.
+Current DM-03/DM-04 behavior adds explicit platform declarations and authenticated
+review; the tests now use that flow. See [supervisor review](mission-supervisor-review.md).
 All sample missions are synthetic. The real-model trial is explicitly deferred.
 
 ## Isolated local setup on this Windows workstation
@@ -74,8 +76,10 @@ perform agent creation, connection and mission input through the real cockpit.
    wind, fenced north perimeter. Drone suitability and flight clearance confirmed."
 3. Check the JSON: drone recommendation, constraints, perception/behavior, first
    action, revision and `awaiting_supervisor_approval`; `ready` must be false.
-4. Send `approve mission 1` for that exact revision. The result becomes
-   `execution_ready` and `ready=true`, without triggering robot execution.
+4. Use Mission supervisor review: Load current mission, inspect its platform
+   declarations, then enter a separately provisioned supervisor credential and
+   Approve. A complete, safe mission becomes execution_ready and ready=true
+   without execution. `approve mission 1` in chat cannot grant approval.
 5. Change the location. Readiness and approval must be revoked and safety must
    be reassessed. Never reuse an old revision's approval.
 6. Reload the page and explicitly reconnect to the existing instance. Its

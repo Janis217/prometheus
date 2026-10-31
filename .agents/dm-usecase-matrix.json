@@ -1,0 +1,1343 @@
+{
+  "schemaVersion": 1,
+  "scenarios": [
+    "fire",
+    "route",
+    "search"
+  ],
+  "phases": [
+    "initiation",
+    "configuration",
+    "approval",
+    "coordination",
+    "escalation",
+    "completion_handoff"
+  ],
+  "deviations": [
+    "ordinary",
+    "missing_information",
+    "unclear_objective",
+    "capability_gap",
+    "obstacle",
+    "connection_loss",
+    "operator_abort"
+  ],
+  "catalog": [
+    {
+      "id": "UC-FIRE-01",
+      "scenario": "fire",
+      "priority": 0,
+      "phases": [
+        "initiation",
+        "configuration",
+        "approval",
+        "coordination",
+        "escalation",
+        "completion_handoff"
+      ],
+      "deviations": [
+        "ordinary"
+      ],
+      "milestones": [
+        "DM-INT",
+        "DM-03",
+        "DM-04",
+        "DM-05",
+        "DM-06"
+      ],
+      "delivery": "first_simulation_slice"
+    },
+    {
+      "id": "UC-FIRE-02",
+      "scenario": "fire",
+      "priority": 0,
+      "phases": [
+        "initiation",
+        "configuration",
+        "approval",
+        "coordination",
+        "escalation",
+        "completion_handoff"
+      ],
+      "deviations": [
+        "missing_information",
+        "unclear_objective",
+        "capability_gap",
+        "obstacle",
+        "connection_loss",
+        "operator_abort"
+      ],
+      "milestones": [
+        "DM-INT",
+        "DM-03",
+        "DM-04",
+        "DM-05",
+        "DM-06"
+      ],
+      "delivery": "first_simulation_slice"
+    },
+    {
+      "id": "UC-ROUTE-01",
+      "scenario": "route",
+      "priority": 1,
+      "phases": [
+        "initiation",
+        "configuration",
+        "approval",
+        "coordination",
+        "escalation",
+        "completion_handoff"
+      ],
+      "deviations": [
+        "ordinary"
+      ],
+      "milestones": [
+        "DM-INT",
+        "DM-03",
+        "DM-04",
+        "DM-05",
+        "DM-06"
+      ],
+      "delivery": "deferred_requirements_only"
+    },
+    {
+      "id": "UC-ROUTE-02",
+      "scenario": "route",
+      "priority": 1,
+      "phases": [
+        "initiation",
+        "configuration",
+        "approval",
+        "coordination",
+        "escalation",
+        "completion_handoff"
+      ],
+      "deviations": [
+        "missing_information",
+        "unclear_objective",
+        "capability_gap",
+        "obstacle",
+        "connection_loss",
+        "operator_abort"
+      ],
+      "milestones": [
+        "DM-INT",
+        "DM-03",
+        "DM-04",
+        "DM-05",
+        "DM-06"
+      ],
+      "delivery": "deferred_requirements_only"
+    },
+    {
+      "id": "UC-SEARCH-01",
+      "scenario": "search",
+      "priority": 2,
+      "phases": [
+        "initiation",
+        "configuration",
+        "approval",
+        "coordination",
+        "escalation",
+        "completion_handoff"
+      ],
+      "deviations": [
+        "ordinary"
+      ],
+      "milestones": [
+        "DM-INT",
+        "DM-03",
+        "DM-04",
+        "DM-05",
+        "DM-06"
+      ],
+      "delivery": "deferred_requirements_only"
+    },
+    {
+      "id": "UC-SEARCH-02",
+      "scenario": "search",
+      "priority": 2,
+      "phases": [
+        "initiation",
+        "configuration",
+        "approval",
+        "coordination",
+        "escalation",
+        "completion_handoff"
+      ],
+      "deviations": [
+        "missing_information",
+        "unclear_objective",
+        "capability_gap",
+        "obstacle",
+        "connection_loss",
+        "operator_abort"
+      ],
+      "milestones": [
+        "DM-INT",
+        "DM-03",
+        "DM-04",
+        "DM-05",
+        "DM-06"
+      ],
+      "delivery": "deferred_requirements_only"
+    }
+  ],
+  "cells": [
+    {
+      "id": "fire/initiation/ordinary",
+      "scenario": "fire",
+      "phase": "initiation",
+      "deviation": "ordinary",
+      "status": "selected",
+      "useCase": "UC-FIRE-01",
+      "rationale": "Mandatory ordinary phase outcome."
+    },
+    {
+      "id": "fire/initiation/missing_information",
+      "scenario": "fire",
+      "phase": "initiation",
+      "deviation": "missing_information",
+      "status": "selected",
+      "useCase": "UC-FIRE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "fire/initiation/unclear_objective",
+      "scenario": "fire",
+      "phase": "initiation",
+      "deviation": "unclear_objective",
+      "status": "selected",
+      "useCase": "UC-FIRE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "fire/initiation/capability_gap",
+      "scenario": "fire",
+      "phase": "initiation",
+      "deviation": "capability_gap",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "Capability checking follows capture and must be resolved before closure."
+    },
+    {
+      "id": "fire/initiation/obstacle",
+      "scenario": "fire",
+      "phase": "initiation",
+      "deviation": "obstacle",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "No movement before execution; report unresolved blockage at closure."
+    },
+    {
+      "id": "fire/initiation/connection_loss",
+      "scenario": "fire",
+      "phase": "initiation",
+      "deviation": "connection_loss",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "Execution-link loss requires an active run; initial access failures are harness concerns."
+    },
+    {
+      "id": "fire/initiation/operator_abort",
+      "scenario": "fire",
+      "phase": "initiation",
+      "deviation": "operator_abort",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "During capture a draft is discarded/reset; it is not an active-run abort."
+    },
+    {
+      "id": "fire/configuration/ordinary",
+      "scenario": "fire",
+      "phase": "configuration",
+      "deviation": "ordinary",
+      "status": "selected",
+      "useCase": "UC-FIRE-01",
+      "rationale": "Mandatory ordinary phase outcome."
+    },
+    {
+      "id": "fire/configuration/missing_information",
+      "scenario": "fire",
+      "phase": "configuration",
+      "deviation": "missing_information",
+      "status": "selected",
+      "useCase": "UC-FIRE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "fire/configuration/unclear_objective",
+      "scenario": "fire",
+      "phase": "configuration",
+      "deviation": "unclear_objective",
+      "status": "selected",
+      "useCase": "UC-FIRE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "fire/configuration/capability_gap",
+      "scenario": "fire",
+      "phase": "configuration",
+      "deviation": "capability_gap",
+      "status": "selected",
+      "useCase": "UC-FIRE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "fire/configuration/obstacle",
+      "scenario": "fire",
+      "phase": "configuration",
+      "deviation": "obstacle",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "No movement before execution; report unresolved blockage at closure."
+    },
+    {
+      "id": "fire/configuration/connection_loss",
+      "scenario": "fire",
+      "phase": "configuration",
+      "deviation": "connection_loss",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "Execution-link loss requires an active run; initial access failures are harness concerns."
+    },
+    {
+      "id": "fire/configuration/operator_abort",
+      "scenario": "fire",
+      "phase": "configuration",
+      "deviation": "operator_abort",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "During capture a draft is discarded/reset; it is not an active-run abort."
+    },
+    {
+      "id": "fire/approval/ordinary",
+      "scenario": "fire",
+      "phase": "approval",
+      "deviation": "ordinary",
+      "status": "selected",
+      "useCase": "UC-FIRE-01",
+      "rationale": "Mandatory ordinary phase outcome."
+    },
+    {
+      "id": "fire/approval/missing_information",
+      "scenario": "fire",
+      "phase": "approval",
+      "deviation": "missing_information",
+      "status": "selected",
+      "useCase": "UC-FIRE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "fire/approval/unclear_objective",
+      "scenario": "fire",
+      "phase": "approval",
+      "deviation": "unclear_objective",
+      "status": "selected",
+      "useCase": "UC-FIRE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "fire/approval/capability_gap",
+      "scenario": "fire",
+      "phase": "approval",
+      "deviation": "capability_gap",
+      "status": "selected",
+      "useCase": "UC-FIRE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "fire/approval/obstacle",
+      "scenario": "fire",
+      "phase": "approval",
+      "deviation": "obstacle",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "No movement before execution; report unresolved blockage at closure."
+    },
+    {
+      "id": "fire/approval/connection_loss",
+      "scenario": "fire",
+      "phase": "approval",
+      "deviation": "connection_loss",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "Execution-link loss requires an active run; initial access failures are harness concerns."
+    },
+    {
+      "id": "fire/approval/operator_abort",
+      "scenario": "fire",
+      "phase": "approval",
+      "deviation": "operator_abort",
+      "status": "selected",
+      "useCase": "UC-FIRE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "fire/coordination/ordinary",
+      "scenario": "fire",
+      "phase": "coordination",
+      "deviation": "ordinary",
+      "status": "selected",
+      "useCase": "UC-FIRE-01",
+      "rationale": "Mandatory ordinary phase outcome."
+    },
+    {
+      "id": "fire/coordination/missing_information",
+      "scenario": "fire",
+      "phase": "coordination",
+      "deviation": "missing_information",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "Capture/review owns missing configuration; runtime findings use escalation."
+    },
+    {
+      "id": "fire/coordination/unclear_objective",
+      "scenario": "fire",
+      "phase": "coordination",
+      "deviation": "unclear_objective",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "Resolve target ambiguity before ordinary progress or final closure."
+    },
+    {
+      "id": "fire/coordination/capability_gap",
+      "scenario": "fire",
+      "phase": "coordination",
+      "deviation": "capability_gap",
+      "status": "selected",
+      "useCase": "UC-FIRE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "fire/coordination/obstacle",
+      "scenario": "fire",
+      "phase": "coordination",
+      "deviation": "obstacle",
+      "status": "selected",
+      "useCase": "UC-FIRE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "fire/coordination/connection_loss",
+      "scenario": "fire",
+      "phase": "coordination",
+      "deviation": "connection_loss",
+      "status": "selected",
+      "useCase": "UC-FIRE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "fire/coordination/operator_abort",
+      "scenario": "fire",
+      "phase": "coordination",
+      "deviation": "operator_abort",
+      "status": "selected",
+      "useCase": "UC-FIRE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "fire/escalation/ordinary",
+      "scenario": "fire",
+      "phase": "escalation",
+      "deviation": "ordinary",
+      "status": "selected",
+      "useCase": "UC-FIRE-01",
+      "rationale": "Mandatory ordinary phase outcome."
+    },
+    {
+      "id": "fire/escalation/missing_information",
+      "scenario": "fire",
+      "phase": "escalation",
+      "deviation": "missing_information",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "Capture/review owns missing configuration; runtime findings use escalation."
+    },
+    {
+      "id": "fire/escalation/unclear_objective",
+      "scenario": "fire",
+      "phase": "escalation",
+      "deviation": "unclear_objective",
+      "status": "selected",
+      "useCase": "UC-FIRE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "fire/escalation/capability_gap",
+      "scenario": "fire",
+      "phase": "escalation",
+      "deviation": "capability_gap",
+      "status": "selected",
+      "useCase": "UC-FIRE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "fire/escalation/obstacle",
+      "scenario": "fire",
+      "phase": "escalation",
+      "deviation": "obstacle",
+      "status": "selected",
+      "useCase": "UC-FIRE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "fire/escalation/connection_loss",
+      "scenario": "fire",
+      "phase": "escalation",
+      "deviation": "connection_loss",
+      "status": "selected",
+      "useCase": "UC-FIRE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "fire/escalation/operator_abort",
+      "scenario": "fire",
+      "phase": "escalation",
+      "deviation": "operator_abort",
+      "status": "selected",
+      "useCase": "UC-FIRE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "fire/completion_handoff/ordinary",
+      "scenario": "fire",
+      "phase": "completion_handoff",
+      "deviation": "ordinary",
+      "status": "selected",
+      "useCase": "UC-FIRE-01",
+      "rationale": "Mandatory ordinary phase outcome."
+    },
+    {
+      "id": "fire/completion_handoff/missing_information",
+      "scenario": "fire",
+      "phase": "completion_handoff",
+      "deviation": "missing_information",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "Capture/review owns missing configuration; runtime findings use escalation."
+    },
+    {
+      "id": "fire/completion_handoff/unclear_objective",
+      "scenario": "fire",
+      "phase": "completion_handoff",
+      "deviation": "unclear_objective",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "Resolve target ambiguity before ordinary progress or final closure."
+    },
+    {
+      "id": "fire/completion_handoff/capability_gap",
+      "scenario": "fire",
+      "phase": "completion_handoff",
+      "deviation": "capability_gap",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "Capability checking follows capture and must be resolved before closure."
+    },
+    {
+      "id": "fire/completion_handoff/obstacle",
+      "scenario": "fire",
+      "phase": "completion_handoff",
+      "deviation": "obstacle",
+      "status": "selected",
+      "useCase": "UC-FIRE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "fire/completion_handoff/connection_loss",
+      "scenario": "fire",
+      "phase": "completion_handoff",
+      "deviation": "connection_loss",
+      "status": "selected",
+      "useCase": "UC-FIRE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "fire/completion_handoff/operator_abort",
+      "scenario": "fire",
+      "phase": "completion_handoff",
+      "deviation": "operator_abort",
+      "status": "selected",
+      "useCase": "UC-FIRE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "route/initiation/ordinary",
+      "scenario": "route",
+      "phase": "initiation",
+      "deviation": "ordinary",
+      "status": "selected",
+      "useCase": "UC-ROUTE-01",
+      "rationale": "Mandatory ordinary phase outcome."
+    },
+    {
+      "id": "route/initiation/missing_information",
+      "scenario": "route",
+      "phase": "initiation",
+      "deviation": "missing_information",
+      "status": "selected",
+      "useCase": "UC-ROUTE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "route/initiation/unclear_objective",
+      "scenario": "route",
+      "phase": "initiation",
+      "deviation": "unclear_objective",
+      "status": "selected",
+      "useCase": "UC-ROUTE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "route/initiation/capability_gap",
+      "scenario": "route",
+      "phase": "initiation",
+      "deviation": "capability_gap",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "Capability checking follows capture and must be resolved before closure."
+    },
+    {
+      "id": "route/initiation/obstacle",
+      "scenario": "route",
+      "phase": "initiation",
+      "deviation": "obstacle",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "No movement before execution; report unresolved blockage at closure."
+    },
+    {
+      "id": "route/initiation/connection_loss",
+      "scenario": "route",
+      "phase": "initiation",
+      "deviation": "connection_loss",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "Execution-link loss requires an active run; initial access failures are harness concerns."
+    },
+    {
+      "id": "route/initiation/operator_abort",
+      "scenario": "route",
+      "phase": "initiation",
+      "deviation": "operator_abort",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "During capture a draft is discarded/reset; it is not an active-run abort."
+    },
+    {
+      "id": "route/configuration/ordinary",
+      "scenario": "route",
+      "phase": "configuration",
+      "deviation": "ordinary",
+      "status": "selected",
+      "useCase": "UC-ROUTE-01",
+      "rationale": "Mandatory ordinary phase outcome."
+    },
+    {
+      "id": "route/configuration/missing_information",
+      "scenario": "route",
+      "phase": "configuration",
+      "deviation": "missing_information",
+      "status": "selected",
+      "useCase": "UC-ROUTE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "route/configuration/unclear_objective",
+      "scenario": "route",
+      "phase": "configuration",
+      "deviation": "unclear_objective",
+      "status": "selected",
+      "useCase": "UC-ROUTE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "route/configuration/capability_gap",
+      "scenario": "route",
+      "phase": "configuration",
+      "deviation": "capability_gap",
+      "status": "selected",
+      "useCase": "UC-ROUTE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "route/configuration/obstacle",
+      "scenario": "route",
+      "phase": "configuration",
+      "deviation": "obstacle",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "No movement before execution; report unresolved blockage at closure."
+    },
+    {
+      "id": "route/configuration/connection_loss",
+      "scenario": "route",
+      "phase": "configuration",
+      "deviation": "connection_loss",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "Execution-link loss requires an active run; initial access failures are harness concerns."
+    },
+    {
+      "id": "route/configuration/operator_abort",
+      "scenario": "route",
+      "phase": "configuration",
+      "deviation": "operator_abort",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "During capture a draft is discarded/reset; it is not an active-run abort."
+    },
+    {
+      "id": "route/approval/ordinary",
+      "scenario": "route",
+      "phase": "approval",
+      "deviation": "ordinary",
+      "status": "selected",
+      "useCase": "UC-ROUTE-01",
+      "rationale": "Mandatory ordinary phase outcome."
+    },
+    {
+      "id": "route/approval/missing_information",
+      "scenario": "route",
+      "phase": "approval",
+      "deviation": "missing_information",
+      "status": "selected",
+      "useCase": "UC-ROUTE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "route/approval/unclear_objective",
+      "scenario": "route",
+      "phase": "approval",
+      "deviation": "unclear_objective",
+      "status": "selected",
+      "useCase": "UC-ROUTE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "route/approval/capability_gap",
+      "scenario": "route",
+      "phase": "approval",
+      "deviation": "capability_gap",
+      "status": "selected",
+      "useCase": "UC-ROUTE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "route/approval/obstacle",
+      "scenario": "route",
+      "phase": "approval",
+      "deviation": "obstacle",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "No movement before execution; report unresolved blockage at closure."
+    },
+    {
+      "id": "route/approval/connection_loss",
+      "scenario": "route",
+      "phase": "approval",
+      "deviation": "connection_loss",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "Execution-link loss requires an active run; initial access failures are harness concerns."
+    },
+    {
+      "id": "route/approval/operator_abort",
+      "scenario": "route",
+      "phase": "approval",
+      "deviation": "operator_abort",
+      "status": "selected",
+      "useCase": "UC-ROUTE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "route/coordination/ordinary",
+      "scenario": "route",
+      "phase": "coordination",
+      "deviation": "ordinary",
+      "status": "selected",
+      "useCase": "UC-ROUTE-01",
+      "rationale": "Mandatory ordinary phase outcome."
+    },
+    {
+      "id": "route/coordination/missing_information",
+      "scenario": "route",
+      "phase": "coordination",
+      "deviation": "missing_information",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "Capture/review owns missing configuration; runtime findings use escalation."
+    },
+    {
+      "id": "route/coordination/unclear_objective",
+      "scenario": "route",
+      "phase": "coordination",
+      "deviation": "unclear_objective",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "Resolve target ambiguity before ordinary progress or final closure."
+    },
+    {
+      "id": "route/coordination/capability_gap",
+      "scenario": "route",
+      "phase": "coordination",
+      "deviation": "capability_gap",
+      "status": "selected",
+      "useCase": "UC-ROUTE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "route/coordination/obstacle",
+      "scenario": "route",
+      "phase": "coordination",
+      "deviation": "obstacle",
+      "status": "selected",
+      "useCase": "UC-ROUTE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "route/coordination/connection_loss",
+      "scenario": "route",
+      "phase": "coordination",
+      "deviation": "connection_loss",
+      "status": "selected",
+      "useCase": "UC-ROUTE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "route/coordination/operator_abort",
+      "scenario": "route",
+      "phase": "coordination",
+      "deviation": "operator_abort",
+      "status": "selected",
+      "useCase": "UC-ROUTE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "route/escalation/ordinary",
+      "scenario": "route",
+      "phase": "escalation",
+      "deviation": "ordinary",
+      "status": "selected",
+      "useCase": "UC-ROUTE-01",
+      "rationale": "Mandatory ordinary phase outcome."
+    },
+    {
+      "id": "route/escalation/missing_information",
+      "scenario": "route",
+      "phase": "escalation",
+      "deviation": "missing_information",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "Capture/review owns missing configuration; runtime findings use escalation."
+    },
+    {
+      "id": "route/escalation/unclear_objective",
+      "scenario": "route",
+      "phase": "escalation",
+      "deviation": "unclear_objective",
+      "status": "selected",
+      "useCase": "UC-ROUTE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "route/escalation/capability_gap",
+      "scenario": "route",
+      "phase": "escalation",
+      "deviation": "capability_gap",
+      "status": "selected",
+      "useCase": "UC-ROUTE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "route/escalation/obstacle",
+      "scenario": "route",
+      "phase": "escalation",
+      "deviation": "obstacle",
+      "status": "selected",
+      "useCase": "UC-ROUTE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "route/escalation/connection_loss",
+      "scenario": "route",
+      "phase": "escalation",
+      "deviation": "connection_loss",
+      "status": "selected",
+      "useCase": "UC-ROUTE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "route/escalation/operator_abort",
+      "scenario": "route",
+      "phase": "escalation",
+      "deviation": "operator_abort",
+      "status": "selected",
+      "useCase": "UC-ROUTE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "route/completion_handoff/ordinary",
+      "scenario": "route",
+      "phase": "completion_handoff",
+      "deviation": "ordinary",
+      "status": "selected",
+      "useCase": "UC-ROUTE-01",
+      "rationale": "Mandatory ordinary phase outcome."
+    },
+    {
+      "id": "route/completion_handoff/missing_information",
+      "scenario": "route",
+      "phase": "completion_handoff",
+      "deviation": "missing_information",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "Capture/review owns missing configuration; runtime findings use escalation."
+    },
+    {
+      "id": "route/completion_handoff/unclear_objective",
+      "scenario": "route",
+      "phase": "completion_handoff",
+      "deviation": "unclear_objective",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "Resolve target ambiguity before ordinary progress or final closure."
+    },
+    {
+      "id": "route/completion_handoff/capability_gap",
+      "scenario": "route",
+      "phase": "completion_handoff",
+      "deviation": "capability_gap",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "Capability checking follows capture and must be resolved before closure."
+    },
+    {
+      "id": "route/completion_handoff/obstacle",
+      "scenario": "route",
+      "phase": "completion_handoff",
+      "deviation": "obstacle",
+      "status": "selected",
+      "useCase": "UC-ROUTE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "route/completion_handoff/connection_loss",
+      "scenario": "route",
+      "phase": "completion_handoff",
+      "deviation": "connection_loss",
+      "status": "selected",
+      "useCase": "UC-ROUTE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "route/completion_handoff/operator_abort",
+      "scenario": "route",
+      "phase": "completion_handoff",
+      "deviation": "operator_abort",
+      "status": "selected",
+      "useCase": "UC-ROUTE-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "search/initiation/ordinary",
+      "scenario": "search",
+      "phase": "initiation",
+      "deviation": "ordinary",
+      "status": "selected",
+      "useCase": "UC-SEARCH-01",
+      "rationale": "Mandatory ordinary phase outcome."
+    },
+    {
+      "id": "search/initiation/missing_information",
+      "scenario": "search",
+      "phase": "initiation",
+      "deviation": "missing_information",
+      "status": "selected",
+      "useCase": "UC-SEARCH-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "search/initiation/unclear_objective",
+      "scenario": "search",
+      "phase": "initiation",
+      "deviation": "unclear_objective",
+      "status": "selected",
+      "useCase": "UC-SEARCH-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "search/initiation/capability_gap",
+      "scenario": "search",
+      "phase": "initiation",
+      "deviation": "capability_gap",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "Capability checking follows capture and must be resolved before closure."
+    },
+    {
+      "id": "search/initiation/obstacle",
+      "scenario": "search",
+      "phase": "initiation",
+      "deviation": "obstacle",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "No movement before execution; report unresolved blockage at closure."
+    },
+    {
+      "id": "search/initiation/connection_loss",
+      "scenario": "search",
+      "phase": "initiation",
+      "deviation": "connection_loss",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "Execution-link loss requires an active run; initial access failures are harness concerns."
+    },
+    {
+      "id": "search/initiation/operator_abort",
+      "scenario": "search",
+      "phase": "initiation",
+      "deviation": "operator_abort",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "During capture a draft is discarded/reset; it is not an active-run abort."
+    },
+    {
+      "id": "search/configuration/ordinary",
+      "scenario": "search",
+      "phase": "configuration",
+      "deviation": "ordinary",
+      "status": "selected",
+      "useCase": "UC-SEARCH-01",
+      "rationale": "Mandatory ordinary phase outcome."
+    },
+    {
+      "id": "search/configuration/missing_information",
+      "scenario": "search",
+      "phase": "configuration",
+      "deviation": "missing_information",
+      "status": "selected",
+      "useCase": "UC-SEARCH-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "search/configuration/unclear_objective",
+      "scenario": "search",
+      "phase": "configuration",
+      "deviation": "unclear_objective",
+      "status": "selected",
+      "useCase": "UC-SEARCH-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "search/configuration/capability_gap",
+      "scenario": "search",
+      "phase": "configuration",
+      "deviation": "capability_gap",
+      "status": "selected",
+      "useCase": "UC-SEARCH-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "search/configuration/obstacle",
+      "scenario": "search",
+      "phase": "configuration",
+      "deviation": "obstacle",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "No movement before execution; report unresolved blockage at closure."
+    },
+    {
+      "id": "search/configuration/connection_loss",
+      "scenario": "search",
+      "phase": "configuration",
+      "deviation": "connection_loss",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "Execution-link loss requires an active run; initial access failures are harness concerns."
+    },
+    {
+      "id": "search/configuration/operator_abort",
+      "scenario": "search",
+      "phase": "configuration",
+      "deviation": "operator_abort",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "During capture a draft is discarded/reset; it is not an active-run abort."
+    },
+    {
+      "id": "search/approval/ordinary",
+      "scenario": "search",
+      "phase": "approval",
+      "deviation": "ordinary",
+      "status": "selected",
+      "useCase": "UC-SEARCH-01",
+      "rationale": "Mandatory ordinary phase outcome."
+    },
+    {
+      "id": "search/approval/missing_information",
+      "scenario": "search",
+      "phase": "approval",
+      "deviation": "missing_information",
+      "status": "selected",
+      "useCase": "UC-SEARCH-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "search/approval/unclear_objective",
+      "scenario": "search",
+      "phase": "approval",
+      "deviation": "unclear_objective",
+      "status": "selected",
+      "useCase": "UC-SEARCH-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "search/approval/capability_gap",
+      "scenario": "search",
+      "phase": "approval",
+      "deviation": "capability_gap",
+      "status": "selected",
+      "useCase": "UC-SEARCH-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "search/approval/obstacle",
+      "scenario": "search",
+      "phase": "approval",
+      "deviation": "obstacle",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "No movement before execution; report unresolved blockage at closure."
+    },
+    {
+      "id": "search/approval/connection_loss",
+      "scenario": "search",
+      "phase": "approval",
+      "deviation": "connection_loss",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "Execution-link loss requires an active run; initial access failures are harness concerns."
+    },
+    {
+      "id": "search/approval/operator_abort",
+      "scenario": "search",
+      "phase": "approval",
+      "deviation": "operator_abort",
+      "status": "selected",
+      "useCase": "UC-SEARCH-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "search/coordination/ordinary",
+      "scenario": "search",
+      "phase": "coordination",
+      "deviation": "ordinary",
+      "status": "selected",
+      "useCase": "UC-SEARCH-01",
+      "rationale": "Mandatory ordinary phase outcome."
+    },
+    {
+      "id": "search/coordination/missing_information",
+      "scenario": "search",
+      "phase": "coordination",
+      "deviation": "missing_information",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "Capture/review owns missing configuration; runtime findings use escalation."
+    },
+    {
+      "id": "search/coordination/unclear_objective",
+      "scenario": "search",
+      "phase": "coordination",
+      "deviation": "unclear_objective",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "Resolve target ambiguity before ordinary progress or final closure."
+    },
+    {
+      "id": "search/coordination/capability_gap",
+      "scenario": "search",
+      "phase": "coordination",
+      "deviation": "capability_gap",
+      "status": "selected",
+      "useCase": "UC-SEARCH-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "search/coordination/obstacle",
+      "scenario": "search",
+      "phase": "coordination",
+      "deviation": "obstacle",
+      "status": "selected",
+      "useCase": "UC-SEARCH-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "search/coordination/connection_loss",
+      "scenario": "search",
+      "phase": "coordination",
+      "deviation": "connection_loss",
+      "status": "selected",
+      "useCase": "UC-SEARCH-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "search/coordination/operator_abort",
+      "scenario": "search",
+      "phase": "coordination",
+      "deviation": "operator_abort",
+      "status": "selected",
+      "useCase": "UC-SEARCH-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "search/escalation/ordinary",
+      "scenario": "search",
+      "phase": "escalation",
+      "deviation": "ordinary",
+      "status": "selected",
+      "useCase": "UC-SEARCH-01",
+      "rationale": "Mandatory ordinary phase outcome."
+    },
+    {
+      "id": "search/escalation/missing_information",
+      "scenario": "search",
+      "phase": "escalation",
+      "deviation": "missing_information",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "Capture/review owns missing configuration; runtime findings use escalation."
+    },
+    {
+      "id": "search/escalation/unclear_objective",
+      "scenario": "search",
+      "phase": "escalation",
+      "deviation": "unclear_objective",
+      "status": "selected",
+      "useCase": "UC-SEARCH-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "search/escalation/capability_gap",
+      "scenario": "search",
+      "phase": "escalation",
+      "deviation": "capability_gap",
+      "status": "selected",
+      "useCase": "UC-SEARCH-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "search/escalation/obstacle",
+      "scenario": "search",
+      "phase": "escalation",
+      "deviation": "obstacle",
+      "status": "selected",
+      "useCase": "UC-SEARCH-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "search/escalation/connection_loss",
+      "scenario": "search",
+      "phase": "escalation",
+      "deviation": "connection_loss",
+      "status": "selected",
+      "useCase": "UC-SEARCH-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "search/escalation/operator_abort",
+      "scenario": "search",
+      "phase": "escalation",
+      "deviation": "operator_abort",
+      "status": "selected",
+      "useCase": "UC-SEARCH-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "search/completion_handoff/ordinary",
+      "scenario": "search",
+      "phase": "completion_handoff",
+      "deviation": "ordinary",
+      "status": "selected",
+      "useCase": "UC-SEARCH-01",
+      "rationale": "Mandatory ordinary phase outcome."
+    },
+    {
+      "id": "search/completion_handoff/missing_information",
+      "scenario": "search",
+      "phase": "completion_handoff",
+      "deviation": "missing_information",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "Capture/review owns missing configuration; runtime findings use escalation."
+    },
+    {
+      "id": "search/completion_handoff/unclear_objective",
+      "scenario": "search",
+      "phase": "completion_handoff",
+      "deviation": "unclear_objective",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "Resolve target ambiguity before ordinary progress or final closure."
+    },
+    {
+      "id": "search/completion_handoff/capability_gap",
+      "scenario": "search",
+      "phase": "completion_handoff",
+      "deviation": "capability_gap",
+      "status": "excluded",
+      "useCase": null,
+      "rationale": "Capability checking follows capture and must be resolved before closure."
+    },
+    {
+      "id": "search/completion_handoff/obstacle",
+      "scenario": "search",
+      "phase": "completion_handoff",
+      "deviation": "obstacle",
+      "status": "selected",
+      "useCase": "UC-SEARCH-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "search/completion_handoff/connection_loss",
+      "scenario": "search",
+      "phase": "completion_handoff",
+      "deviation": "connection_loss",
+      "status": "selected",
+      "useCase": "UC-SEARCH-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    },
+    {
+      "id": "search/completion_handoff/operator_abort",
+      "scenario": "search",
+      "phase": "completion_handoff",
+      "deviation": "operator_abort",
+      "status": "selected",
+      "useCase": "UC-SEARCH-02",
+      "rationale": "Changes the interaction outcome at this phase; see catalog variant."
+    }
+  ],
+  "interactionWorkPackages": {
+    "state_and_messages": [
+      "UC-FIRE-01",
+      "UC-FIRE-02"
+    ],
+    "escalation_loop": [
+      "UC-FIRE-02"
+    ],
+    "completion_and_handoff": [
+      "UC-FIRE-01",
+      "UC-FIRE-02"
+    ],
+    "ordinary_and_challenging_journey": [
+      "UC-FIRE-01",
+      "UC-FIRE-02"
+    ],
+    "tests_and_walkthrough": [
+      "UC-FIRE-01",
+      "UC-FIRE-02"
+    ]
+  }
+}

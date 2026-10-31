@@ -38,7 +38,7 @@ class PrometheusCorsConfigurationWebMvcTest {
                 .header(HttpHeaders.ORIGIN, "https://cockpit.example.test")
                 .header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "POST")
                 .header(HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS,
-                        "content-type,x-prometheus-access-code,x-prometheus-trace-id"))
+                        "content-type,x-prometheus-access-code,x-prometheus-trace-id,x-prometheus-supervisor-token"))
                 .andExpect(status().isOk())
                 .andExpect(header().string(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN,
                         "https://cockpit.example.test"))

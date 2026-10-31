@@ -16,13 +16,20 @@ class DisasterMissionConfigurationUnitTest {
             {"missionType":"fire_hotspot_inspection","objective":"Map hotspots from safe perimeter",
             "priority":"high","location":"warehouse north","environment":"outdoor_open",
             "risks":"smoke; maintain standoff","operatingConditions":"clear visibility, low wind",
-            "searchBoundary":"north fenced perimeter","safetyAssessment":"safe"}
+            "searchBoundary":"north fenced perimeter","safetyAssessment":"safe",
+            "platformEvidence":{"communications":"confirmed","safeStandoff":"confirmed",
+            "platformSuitability":"confirmed","flightClearance":"confirmed","weatherEnvelope":"confirmed"}}
             """;
     private final LanguageModelGateway gateway = mock(LanguageModelGateway.class);
     private final PolicyRuntime runtime = new PolicyRuntime(new PromptMessageAssembler(), gateway);
     private final Agent agent = new DisasterMissionConfiguration().createAgent();
     private JsonObject mission() { return agent.getStorage().get(DisasterMission.KEY).getAsJsonObject(); }
     private void say(String text) { agent.acknowledge(Event.observation(Event.TYPE_USER_UTTERANCE, "operator", text), runtime); }
+    // Domain fixture only; real credential/scope checks are covered by MissionReviewIntegrationTest.
+    private void review() {
+        ((DisasterMissionPolicy) agent.getCurrentState().ownPolicy()).recordReview(
+                DisasterMission.evaluate(mission(), mission().get("revision").getAsInt(), true), "unit_review", new JsonObject());
+    }
 
     @Test void successRequiresRevisionBoundApprovalAndEmitsMachineReadableOutput() {
         agent.start(runtime);
@@ -34,6 +41,8 @@ class DisasterMissionConfigurationUnitTest {
         assertEquals("awaiting_supervisor_approval", mission().get("approvalState").getAsString());
         assertFalse(mission().get("ready").getAsBoolean());
         say("approve mission 1");
+        assertFalse(mission().get("ready").getAsBoolean());
+        review();
         assertTrue(mission().get("ready").getAsBoolean());
         assertTrue(mission().toString().length() <= 2048);
         assertEquals("execution_ready", mission().get("phase").getAsString());
@@ -63,14 +72,19 @@ class DisasterMissionConfigurationUnitTest {
         completed.addProperty("missionType", "missing_person_search");
         completed.addProperty("objective", "Find missing person");
         completed.addProperty("environment", "indoor_flat");
+        completed.getAsJsonObject("platformEvidence").addProperty("accessClearance", "confirmed");
+        completed.getAsJsonObject("platformEvidence").addProperty("terrainSuitability", "confirmed");
         when(gateway.extract(any())).thenReturn(completed);
         say("Search the flat warehouse interior; north fenced boundary, clear visibility, smoke mitigated.");
         assertEquals("ground robot", mission().get("selectedEmbodiment").getAsString());
         assertFalse(mission().get("ready").getAsBoolean());
         assertEquals("unknown", mission().get("safetyAssessment").getAsString());
         say("Hazards and mitigations reassessed; ground robot suitability and structural clearance confirmed.");
+        assertEquals("unknown", mission().get("safetyAssessment").getAsString());
+        say("Reassess safety against the newly supplied ground-platform declarations.");
         assertEquals("awaiting_supervisor_approval", mission().get("approvalState").getAsString());
-        say("approve mission 3");
+        say("approve mission 4");
+        review();
         assertTrue(mission().get("ready").getAsBoolean());
     }
 
@@ -88,6 +102,7 @@ class DisasterMissionConfigurationUnitTest {
         when(gateway.extract(any())).thenReturn(JsonParser.parseString(BRIEF));
         say("Hazards mitigated; clearance confirmed");
         say("approve mission 2");
+        review();
         assertTrue(mission().get("ready").getAsBoolean());
         var edited = JsonParser.parseString(BRIEF).getAsJsonObject();
         edited.addProperty("location", "warehouse south");
@@ -110,5 +125,23 @@ class DisasterMissionConfigurationUnitTest {
         say("Provide oversized mission brief");
         assertFalse(mission().get("ready").getAsBoolean());
         assertTrue(mission().toString().length() <= 2048);
+    }
+
+    @Test void changedPlatformDeclarationRequiresRenewedAssessmentAndInvalidatesConfirmation() {
+        agent.start(runtime);
+        var draft = JsonParser.parseString(BRIEF).getAsJsonObject();
+        when(gateway.extract(any())).thenReturn(draft);
+        say("Complete inspection brief and platform declarations"); review();
+        assertTrue(mission().get("ready").getAsBoolean());
+        draft.getAsJsonObject("platformEvidence").addProperty("flightClearance", "failed");
+        say("Flight clearance withdrawn");
+        assertFalse(mission().get("ready").getAsBoolean());
+        assertEquals("blocked", mission().get("phase").getAsString());
+        draft.getAsJsonObject("platformEvidence").addProperty("flightClearance", "confirmed");
+        say("New flight clearance supplied");
+        assertEquals("unknown", mission().get("safetyAssessment").getAsString());
+        say("approve mission 3"); assertFalse(mission().get("ready").getAsBoolean());
+        say("Reassessed hazards and mitigations after clearance change");
+        review(); assertTrue(mission().get("ready").getAsBoolean());
     }
 }

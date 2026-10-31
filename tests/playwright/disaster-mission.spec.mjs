@@ -40,10 +40,26 @@ for (const scenario of ["success", "missing", "unsafe"]) {
       ? "Inspect hotspots at North Warehouse; smoke mitigated, clear visibility, low wind, fenced north perimeter. Drone suitability and flight clearance confirmed."
       : scenario === "missing" ? "Search for a missing person" : "Enter the burning building without clearance";
     const draft = await say(brief); expect(draft.ready).toBe(false);
-    const result = await say(`approve mission ${draft.revision}`);
+    let result = await say(`approve mission ${draft.revision}`);
+    expect(result.ready).toBe(false); // Conversation text never establishes supervisor authority.
+    if (scenario === "success") {
+      const issued = await request.post("/admin/disaster/supervisors", { headers: adminHeaders,
+        data: { scopeId: access.id, name: "Synthetic browser supervisor" } });
+      expect(issued.status()).toBe(201); const credential = await issued.json();
+      await page.getByText("Mission supervisor review", { exact: true }).click();
+      await page.getByTestId("mission-review-load").click();
+      await expect(page.getByTestId("mission-review-summary")).toContainText("platformSafety");
+      await page.getByTestId("mission-review-token").fill(credential.token);
+      await page.locator('[data-decision="approve"]').click();
+      await expect(page.getByTestId("mission-review-status")).toContainText("Recorded: approve");
+      await expect(page.getByTestId("mission-review-token")).toHaveValue("");
+      result = await mission();
+      expect(result.approvalState).toBe("supervisor_approved");
+      expect(JSON.parse(await page.getByTestId("mission-review-summary").innerText())).toEqual(result);
+    }
     expect(result.ready).toBe(scenario === "success");
     expect(result.phase).toBe(({ success: "execution_ready", missing: "mission_capture", unsafe: "blocked" })[scenario]);
-    await expect(page.getByTestId("message-list")).toContainText(result.phase);
+    if (scenario !== "success") await expect(page.getByTestId("message-list")).toContainText(result.phase);
     if (scenario === "missing") expect(result.missingInformation).toContain("location");
     if (scenario === "success") {
       expect(result.selectedEmbodiment).toBe("drone"); expect(result.constraints.length).toBeGreaterThan(0);
