@@ -5,7 +5,8 @@ application schema. Test provider endpoints exist solely on the test classpath.
 """
 from pathlib import Path
 from urllib.parse import urlparse
-from urllib.request import urlopen
+from urllib.request import Request, urlopen
+import json
 import argparse
 import os
 import re
@@ -22,6 +23,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--java-tests', default='LiveCockpitSmokeIntegrationTest', help='Comma-separated Maven test names, all, or none')
     parser.add_argument('--browser', action='store_true', help='Run real-app smoke enabled and disabled, then focused UI regressions')
+    parser.add_argument('--manual', action='store_true', help='Keep an offline Valerian fire demo running until Enter; no paid provider')
     parser.add_argument('--browser-grep', help='Optional Playwright title filter for focused reruns')
     parser.add_argument('--browser-spec', action='append', help='Explicit browser spec instead of the default Live suites; repeatable')
     parser.add_argument('--live-only', action='store_true', help='With --browser, omit already verified legacy browser regression specs')
@@ -29,6 +31,8 @@ def main():
                         help='Local MySQL administration properties; only loopback hosts are accepted')
     parser.add_argument('--paid-core', choices=['live', 'face', 'social', 'space', 'task', 'space-task', 'rps', 'user-guess', 'agent-guess', 'care-guess'], help='Explicitly paid real OpenAI core journey; local disposable database only')
     args = parser.parse_args()
+    if args.manual and (args.browser or args.paid_core):
+        parser.error('--manual must run separately from --browser and --paid-core')
     if args.paid_core and args.browser:
         parser.error('--paid-core and mocked --browser acceptance must run separately')
     root = Path(__file__).resolve().parents[2]
@@ -125,7 +129,7 @@ def main():
             created_user = True
             cursor.execute('GRANT ALL PRIVILEGES ON `' + schema + '`.* TO %s@%s', (username, 'localhost'))
         print('Disposable schema: ' + schema + '; artifacts: ' + str(artifacts), flush=True)
-        if args.java_tests != 'none':
+        if args.java_tests != 'none' and not args.manual:
             selection = [] if args.java_tests == 'all' else ['-Dtest=' + args.java_tests]
             # Every cached Spring context owns a pool. Bound aggregate local connections
             # for full-suite runs without changing any application's production pool size.
@@ -162,7 +166,7 @@ def main():
                 run(['node', 'tests/gptlive/core_backend_journey.mjs', '--allow-paid-provider', str(artifacts / 'journey.json'),
                     '--agent=' + args.paid_core], 'paid-journey')
                 stop()
-        if args.browser:
+        if args.browser or args.manual:
             run([*maven, '-q', '-DskipTests', 'test-compile', 'dependency:build-classpath',
                 '-Dmdep.outputFile=' + str(artifacts / 'classpath.txt')], 'compile')
             # Isolate just the explicit fixtures; unrelated test controllers never enter component scanning.
@@ -172,7 +176,7 @@ def main():
                 shutil.copy2(source, fixtures / source.name)
             classpath = os.pathsep.join([str(root / 'target/classes'), str(artifacts / 'fixture-classes'),
                 (artifacts / 'classpath.txt').read_text().strip()])
-            for enabled in ('true', 'false'):
+            for enabled in (('false',) if args.manual else ('true', 'false')):
                 with socket.socket() as port_socket:
                     port_socket.bind(('127.0.0.1', 0))
                     port = port_socket.getsockname()[1]
@@ -193,6 +197,27 @@ def main():
                             time.sleep(0.5)
                     else:
                         raise RuntimeError('Isolated app startup timed out.')
+                    if args.manual:
+                        def admin_request(path, payload, method='POST'):
+                            request = Request(env['PROMETHEUS_BASE_URL'] + path,
+                                data=json.dumps(payload).encode(), method=method,
+                                headers={'Content-Type': 'application/json', 'X-Prometheus-Admin-Token': env['PROMETHEUS_ADMIN_TOKEN']})
+                            with urlopen(request, timeout=15) as response:
+                                return json.load(response)
+                        scope = admin_request('/admin/access-codes', {'code': 'DM001', 'enabled': True})
+                        admin_request('/admin/access-codes/' + scope['id'] + '/agent-types',
+                            {'agentTypeKeys': ['core.disaster_mission_configuration']}, 'PUT')
+                        supervisor = admin_request('/admin/disaster/supervisors',
+                            {'scopeId': scope['id'], 'name': 'Local manual-demo supervisor'})
+                        credential_file = artifacts / 'manual-access.json'
+                        credential_file.write_text(json.dumps({'url': env['PROMETHEUS_BASE_URL'] + '/valerian/',
+                            'accessCode': 'DM001', 'supervisorToken': supervisor['token']}, indent=2), encoding='utf-8')
+                        print('Manual offline demo: ' + env['PROMETHEUS_BASE_URL'] + '/valerian/', flush=True)
+                        print('Access code: DM001. Private disposable supervisor credential: ' + str(credential_file), flush=True)
+                        print('Keep this terminal open. Text mode only; do not share the credential file.', flush=True)
+                        input('Press Enter here to stop the app and remove its disposable database: ')
+                        stop()
+                        continue
                     specs = ['tests/playwright/valerian-gptlive-smoke.spec.mjs', 'tests/playwright/valerian-state-view.spec.mjs']
                     if enabled == 'true':
                         specs += ['tests/playwright/valerian-gptlive.spec.mjs']

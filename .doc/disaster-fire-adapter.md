@@ -1,5 +1,8 @@
 # Approved fire-image simulator demonstrator
 
+For a browser test with a server that stays running and temporary credentials
+already provisioned, follow [the manual step-by-step guide](valerian-manual-fire-test.md).
+
 UC-FIRE-01/02 demonstrate mission interaction through the existing PROMETHEUS
 agent and Valerian. The local adapter performs a synthetic printed-indicator
 inspection, with no camera, actual image, map, robot movement or provider trial.

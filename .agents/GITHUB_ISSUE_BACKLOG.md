@@ -485,6 +485,9 @@ validation is claimed by the earlier rehearsal. Integrated completion evidence:
 DM_INT_RESULTS.md addendum, DM03_RESULTS.md, DM04_RESULTS.md and DM05_RESULTS.md.
 Final run passed 34 focused unit/client checks, 11 integration tests and 18 browser
 cases, plus packaging. New adapter UI/replay guide: .doc/disaster-fire-adapter.md.
+Manual follow-up: .doc/valerian-manual-fire-test.md and the existing runner's
+--manual option keep the offline demo open for human testing. Startup/provisioning,
+capture/review/obstacle replay and Enter cleanup verified; evidence in DM_INT_RESULTS.md.
 Synthetic execution is labelled; operational handoff still requires the separate
 deferred real-model gate and physical pilot acceptance where applicable.
 

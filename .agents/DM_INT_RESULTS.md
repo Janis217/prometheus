@@ -208,3 +208,33 @@ Gala, Cutoff and DM-06 remain open. No commit, push or deployment occurred.
 
 Next: human review of the reproducible demonstrator, then the explicitly deferred
 interpretation gate and hardware prerequisites. Do not broaden autonomy first.
+
+## Manual test usability follow-up
+
+The user requested step-by-step manual Valerian instructions. Added --manual to
+the existing isolated acceptance runner; default automated acceptance is unchanged.
+It starts the same offline fixture application with Live disabled, provisions a
+DM001 access scope and an individual temporary supervisor credential, then waits
+for Enter before existing application/schema/account cleanup. The credential is
+written only to ignored target/gptlive-acceptance-<id>/manual-access.json, never
+printed or committed. Paid/browser modes cannot be combined with manual mode.
+
+Guide: ../.doc/valerian-manual-fire-test.md. Exact startup verification:
+
+```powershell
+$env:JAVA_HOME = 'C:/Program Files/Java/jdk-21'
+$env:PATH = "$env:JAVA_HOME/bin;$env:PATH"
+$env:PYTHONPATH = Join-Path (Get-Location) 'target/dm02-python'
+python tests/gptlive/run_acceptance.py --database-properties target/dm02-database.properties --manual
+```
+
+Startup/compile and provisioning passed at target/gptlive-acceptance-b5a4e8fb0b/.
+Using that temporary fixture application, the four capture/reassessment inputs,
+scoped supervisor approval and replay_fire_adapter.py --variant obstacle passed
+through real local HTTP/MySQL (8 adapter transitions); artifact
+target/manual-demo-proof.json. Enter exited normally and removed app/schema/account.
+A subsequent check found zero disposable schemas/accounts before shutting down
+only the dedicated MySQL instance (verified by exact data directory).
+
+No provider/hardware call or Java runtime change. Prior browser evidence covers
+the GUI; this follow-up claims no new human usability approval.
