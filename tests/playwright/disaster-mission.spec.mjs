@@ -1,4 +1,5 @@
 import { test, expect } from "./fixtures/offline-ui-assets.mjs";
+import { missionText, label } from '../../src/main/resources/public/valerian/mission-presentation.js';
 
 // Real application HTTP, scoped services, SSE and MySQL. Only extraction is a deterministic test provider.
 const TYPE = "core.disaster_mission_configuration";
@@ -55,11 +56,11 @@ for (const scenario of ["success", "missing", "unsafe"]) {
       await expect(page.getByTestId("mission-review-token")).toHaveValue("");
       result = await mission();
       expect(result.approvalState).toBe("supervisor_approved");
-      expect(JSON.parse(await page.getByTestId("mission-review-summary").innerText())).toEqual(result);
+      expect(JSON.parse(await page.getByTestId("mission-review-summary").textContent())).toEqual(result);
     }
     expect(result.ready).toBe(scenario === "success");
     expect(result.phase).toBe(({ success: "execution_ready", missing: "mission_capture", unsafe: "blocked" })[scenario]);
-    if (scenario !== "success") await expect(page.getByTestId("message-list")).toContainText(result.phase);
+    if (scenario !== "success") await expect(page.getByTestId("message-list")).toContainText(label(result.approvalState));
     if (scenario === "missing") expect(result.missingInformation).toContain("location");
     if (scenario === "success") {
       expect(result.selectedEmbodiment).toBe("drone"); expect(result.constraints.length).toBeGreaterThan(0);
@@ -80,7 +81,7 @@ for (const scenario of ["success", "missing", "unsafe"]) {
     await expect(page.locator("#diagnostics_drawer")).toBeHidden();
     const lastAssistant = page.getByTestId("message-list").locator(".demo-message.assistant .demo-bubble").last();
     await expect(lastAssistant).toBeVisible();
-    expect(JSON.parse(await lastAssistant.innerText())).toEqual(beforeReload);
+    expect(await lastAssistant.innerText()).toEqual(missionText(beforeReload));
     expect(await mission()).toEqual(beforeReload);
     await info.attach("mission-result", { body: JSON.stringify(beforeReload, null, 2), contentType: "application/json" });
     await page.locator('[data-column-panel="interaction"]').screenshot({ path: info.outputPath(`mission-${scenario}.png`) });

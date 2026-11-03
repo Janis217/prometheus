@@ -38,6 +38,12 @@ public class MissionReviewController {
             @RequestBody MissionReviewService.Decision input) {
         return service.decide(id, code, token, input);
     }
+    @PutMapping("/demo/agents/{id}/mission-configuration")
+    public MissionReviewService.Review configure(@PathVariable UUID id,
+            @RequestHeader(value = ScopedDemoController.ACCESS_CODE_HEADER, required = false) String code,
+            @RequestBody MissionReviewService.Configuration input) {
+        return service.configure(id, code, input);
+    }
     private void admin(String token) {
         if (adminToken == null || adminToken.isBlank() || !adminToken.equals(token))
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);

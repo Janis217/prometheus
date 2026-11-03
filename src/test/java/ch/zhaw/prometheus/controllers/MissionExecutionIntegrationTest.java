@@ -76,6 +76,41 @@ class MissionExecutionIntegrationTest {
                 Map.of("executionId", state.get("executionId").asText(), "expectedSequence", state.get("sequence").asInt(), "action", action), expected);
     }
 
+    @Test void structuredConfigurationIsScopedVersionedAndNeverGrantsApproval() throws Exception {
+        var setup = setup("Configure printed-indicator mission", true);
+        var original = get("/mission-review", setup);
+        int revision = json.readTree(original.get("mission").asText()).get("revision").asInt();
+        var fields = new java.util.HashMap<String,String>(Map.of("missionType", "fire_hotspot_inspection", "objective", "Find printed fire indicator",
+                "priority", "low", "location", "R-204", "environment", "indoor_flat", "risks", "printed image only; no actual fire",
+                "operatingConditions", "clear room; stop on hazard or lost link", "searchBoundary", "R-204 interior only", "safetyAssessment", "safe"));
+        var evidence = Map.of("communications", "confirmed", "safeStandoff", "confirmed", "platformSuitability", "confirmed",
+                "accessClearance", "confirmed", "terrainSuitability", "confirmed");
+        String path = "/demo/agents/" + setup.id() + "/mission-configuration";
+        var body = Map.of("expectedRevision", revision, "fields", fields, "platformEvidence", evidence, "robot", "ground robot");
+        mvc.perform(put(path).header(CODE, "WRONG").contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsBytes(body)))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(put(path).header(CODE, setup.code()).contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsBytes(
+                Map.of("expectedRevision", revision, "fields", fields, "platformEvidence", evidence, "robot", "drone"))))
+                .andExpect(status().isBadRequest());
+        assertEquals(original, get("/mission-review", setup));
+        mvc.perform(put(path).header(CODE, setup.code()).contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsBytes(body)))
+                .andExpect(status().isOk());
+        var saved = get("/mission-review", setup); var mission = json.readTree(saved.get("mission").asText());
+        assertEquals(revision + 1, mission.get("revision").asInt()); assertFalse(mission.get("ready").asBoolean());
+        assertEquals("awaiting_supervisor_approval", mission.get("approvalState").asText());
+        assertEquals(original.get("reviewVersion"), saved.get("reviewVersion"));
+        mvc.perform(put(path).header(CODE, setup.code()).contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsBytes(body)))
+                .andExpect(status().isConflict());
+        post("/demo/agents/" + setup.id() + "/mission-review", setup, decision(original, "approve"), 409);
+        post("/demo/agents/" + setup.id() + "/mission-review", setup, decision(saved, "approve"), 200);
+        assertTrue(json.readTree(get("/mission-review", setup).get("mission").asText()).get("ready").asBoolean());
+        fields.put("safetyAssessment", "unknown");
+        mvc.perform(put(path).header(CODE, setup.code()).contentType(MediaType.APPLICATION_JSON).content(json.writeValueAsBytes(
+                Map.of("expectedRevision", revision + 1, "fields", fields, "platformEvidence", Map.of(), "robot", "ground robot"))))
+                .andExpect(status().isOk());
+        post("/demo/agents/" + setup.id() + "/mission-review", setup, decision(get("/mission-review", setup), "approve"), 409);
+    }
+
     @Test void allSimulatorVariantsCommitApprovedSnapshotFeedbackAndHandoff() throws Exception {
         for (String variant : List.of("ordinary", "obstacle", "failure", "timeout", "abort")) {
             var setup = setup("Configure printed-indicator mission", true);

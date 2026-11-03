@@ -27,6 +27,8 @@ public class MissionReviewService {
     }
     public record Decision(UUID requestId, int revision, int reviewVersion, String safetyReference, String decision) {}
     public record Review(String mission, int reviewVersion, String safetyReference) {}
+    public record Configuration(int expectedRevision, java.util.Map<String, String> fields,
+            java.util.Map<String, String> platformEvidence, String robot) {}
     private final MissionSupervisorRepository supervisors;
     private final AccessCodeRepository scopes;
     private final AgentRepository agents;
@@ -62,6 +64,40 @@ public class MissionReviewService {
             var agent = agents.findById(id).orElseThrow(() -> failure(HttpStatus.NOT_FOUND));
             var mission = mission(agent.getStorage());
             return new Review(mission.toString(), version(agent.getStorage()), safetyReference(mission));
+        }));
+    }
+
+    /** Structured operator input uses the same validation and approval boundary as chat edits. */
+    public Review configure(UUID id, String code, Configuration input) {
+        if (input == null || input.fields() == null || input.platformEvidence() == null || input.robot() == null)
+            throw failure(HttpStatus.BAD_REQUEST);
+        var draft = new JsonObject();
+        for (var entry : input.fields().entrySet()) {
+            if (!DisasterMission.FIELDS.contains(entry.getKey()) || entry.getValue() == null || entry.getValue().length() > 300)
+                throw failure(HttpStatus.BAD_REQUEST);
+            draft.addProperty(entry.getKey(), entry.getValue().strip());
+        }
+        var evidence = new JsonObject();
+        for (var entry : input.platformEvidence().entrySet()) {
+            if (!List.of("communications", "safeStandoff", "platformSuitability", "accessClearance", "terrainSuitability",
+                    "flightClearance", "weatherEnvelope", "structuralClearance").contains(entry.getKey())
+                    || entry.getValue() == null || !List.of("confirmed", "failed", "unknown").contains(entry.getValue())) throw failure(HttpStatus.BAD_REQUEST);
+            evidence.addProperty(entry.getKey(), entry.getValue());
+        }
+        draft.add("platformEvidence", evidence);
+        return agentService.serialized(id, () -> transaction.execute(status -> {
+            checkScope(id, code);
+            var agent = agents.findById(id).orElseThrow(() -> failure(HttpStatus.NOT_FOUND));
+            if (!(agent.getCurrentState().ownPolicy() instanceof DisasterMissionPolicy policy)) throw failure(HttpStatus.NOT_FOUND);
+            var previous = DisasterMission.current(policy.storage());
+            if (input.expectedRevision() != previous.get("revision").getAsInt()
+                    || policy.storage().containsKey(DisasterMissionSimulation.KEY)) throw failure(HttpStatus.CONFLICT);
+            var evaluated = DisasterMission.evaluate(draft, input.expectedRevision() + 1, false);
+            if (!input.robot().equals(DisasterMission.text(evaluated, "selectedEmbodiment"))
+                    || DisasterMission.text(evaluated, "question").startsWith("Please shorten")) throw failure(HttpStatus.BAD_REQUEST);
+            policy.storage().put(DisasterMission.KEY, evaluated);
+            agents.saveAndFlush(agent);
+            return new Review(evaluated.toString(), version(agent.getStorage()), safetyReference(evaluated));
         }));
     }
 

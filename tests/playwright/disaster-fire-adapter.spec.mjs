@@ -51,8 +51,8 @@ for (const variant of ["ordinary", "obstacle"]) test(`DM-INT authorized ${varian
   const summary = page.getByTestId("mission-execution-summary");
   const action = async (name, phase) => {
     const button = page.locator(`[data-execution="${name}"]`); await button.click();
-    await expect(button).toBeEnabled(); await expect(summary).toContainText(`"phase": "${phase}"`);
-    const state = JSON.parse(await summary.innerText()); timeline.push({ action: name, state });
+    await expect(summary).toContainText(`"phase": "${phase}"`);
+    const state = JSON.parse(await summary.textContent()); timeline.push({ action: name, state });
     expect(state.simulation).toBe(true); expect(state.operationalReady).toBe(false); return state;
   };
   await action("start", "awaiting_acceptance"); await expect(page.getByTestId("mission-review-token")).toHaveValue("");
@@ -68,7 +68,7 @@ for (const variant of ["ordinary", "obstacle"]) test(`DM-INT authorized ${varian
   await page.reload(); await page.locator("#open_diagnostics").click(); await page.getByTestId("agent-select").selectOption(agent.id);
   await page.getByTestId("connect-agent").click(); await expect(page.getByTestId("agent-connection-state")).toContainText(`Connected to ${agent.id}`); await close();
   await page.getByText("Mission supervisor review", { exact: true }).click(); await page.getByTestId("mission-review-load").click();
-  await expect(summary).toContainText('"phase": "closed"'); expect(JSON.parse(await summary.innerText())).toEqual(final);
+  await expect(summary).toContainText('"phase": "closed"'); expect(JSON.parse(await summary.textContent())).toEqual(final);
   await info.attach("authorized-simulation-timeline", { body: JSON.stringify(timeline, null, 2), contentType: "application/json" });
   await page.locator("#mission_review_panel").screenshot({ path: info.outputPath("authorized-simulation-handoff.png") });
 });

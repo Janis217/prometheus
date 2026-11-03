@@ -2,8 +2,37 @@
 
 This guide starts the existing offline test harness for manual use. No OpenAI
 key, paid provider, camera or robot is needed. Text interpretation and executor
-findings are fixed synthetic fixtures. Copy the sample inputs exactly; arbitrary
-conversation is not supported by this offline provider.
+findings are fixed synthetic fixtures. The guided form submits structured values
+without a language provider; arbitrary conversation is not supported offline.
+
+## Guided task creation and readable results
+
+After connecting the Disaster Mission Configuration agent, use **Create task**
+to answer one question at a time. Fixed categories use dropdowns, descriptions
+accept your own text, and **Use demo answer** fills the current question. Terrain
+determines the supported robot and its required operator declarations.
+
+For the existing scenario, **Load R-204 demo** fills all answers. Review them and
+explicitly confirm the declarations, then select **Save task for supervisor review**.
+Saving never approves a mission. Custom missions can be configured and reviewed,
+but the in-process simulator only supports the printed-indicator R-204 scenario.
+
+The current mission appears as a readable summary. Open **Mission supervisor
+review**, enter the separately issued credential and choose **Approve**. Enter
+the credential again to **Run demo simulation**. Use **Next simulation update**
+until the result is available, then **Acknowledge result**. The readable timeline
+is restored on reconnect; only actions valid for the current phase are enabled.
+Failures, cancellation and timeouts never display a successful finding.
+
+**Technical details** contains the original mission and simulation JSON. Other
+connected windows refresh the current state automatically; stale form submissions
+are rejected without overwriting newer answers. Conversation shortcuts are hidden
+for this agent because the offline provider does not understand them.
+
+**Start a new mission** creates and connects a separate instance without deleting
+the previous run. A supervisor using another window must select and connect that
+new instance through configuration. Credentials clear when the mission changes.
+The original exact-text procedure below remains available for fixture diagnostics.
 
 ## 1. Start the dedicated test database
 

@@ -34,11 +34,20 @@ const state = {
 
 const liveVoice = { ui: null };
 let missionReviewUi = null;
+let readableMissionSpeech = text => text;
 async function ensureMissionReviewUi() {
   if (!missionReviewUi) {
     const { mountMissionReview } = await import("./mission-review.js");
+    ({ readableMissionSpeech } = await import("./mission-presentation.js"));
     missionReviewUi = mountMissionReview(document.getElementById("mission_review_panel"),
-      () => ({ agentId: state.agentId, accessCode: state.accessCode }));
+      () => ({ agentId: state.agentId, accessCode: state.accessCode }), { createNew: async () => {
+        const response = await scopedFetch("/demo/agents", { method: "POST", headers: {"Content-Type":"application/json"},
+          body: JSON.stringify({agentDefinitionKey:"core.disaster_mission_configuration"}) });
+        if (!response.ok) throw new Error("Unable to create a new mission instance.");
+        const agent = await response.json();
+        state.agents = mergeAgents(state.agents, [agent]); renderAgents();
+        await connectToAgent(agentIdOf(agent));
+      }});
   }
   missionReviewUi.clear();
 }
@@ -1150,6 +1159,8 @@ async function loadAgentInfo() {
     const data = await response.json();
     state.agentInfo = data;
     document.getElementById("mission_review_panel").hidden = !data.interactionProfile?.profileTags?.includes("demo.disaster_mission");
+    document.querySelector('[data-testid="shortcut-ready"]').closest(".surface-panel").hidden = !document.getElementById("mission_review_panel").hidden;
+    if (!document.getElementById("mission_review_panel").hidden) void missionReviewUi?.refresh();
     document.getElementById("agent_info_name").textContent = prometheusFacingText(data.name, data.personaName) || "-";
     document.getElementById("agent_info_description").textContent = prometheusFacingText(
       data.description,
@@ -1180,6 +1191,7 @@ async function disconnectAgent(options = {}) {
   state.agentId = null;
   missionReviewUi?.clear();
   document.getElementById("mission_review_panel").hidden = true;
+  document.querySelector('[data-testid="shortcut-ready"]').closest(".surface-panel").hidden = false;
   globalThis.PrometheusActivity?.scope(null);
   state.agentInfo = null;
   void configureGptLive();
@@ -2498,7 +2510,7 @@ function renderBehaviourPlan(plan, options = {}) {
   }
   if (!options.preserveNonSpeech) resetBehaviourPanels();
   if (typeof plan.speech === "string" && plan.speech.trim()) {
-    setText("speech_preview", plan.speech.trim());
+    setText("speech_preview", readableMissionSpeech(plan.speech.trim()));
     setBehaviourChannelActive("speech", true);
   }
   if (!options.preserveNonSpeech) {
@@ -5637,7 +5649,8 @@ function appendMessage(role, text, eventId = null) {
   row.className = `demo-message ${role}`;
   const bubble = document.createElement("div");
   bubble.className = "demo-bubble";
-  bubble.textContent = text;
+  bubble.textContent = role === "assistant" ? readableMissionSpeech(text) : text;
+  if (bubble.textContent !== text) bubble.style.whiteSpace = "pre-wrap";
   row.appendChild(bubble);
   list.appendChild(row);
   list.scrollTop = list.scrollHeight;
@@ -5770,6 +5783,7 @@ function setControlsEnabled(enabled) {
     "gptlive_tab",
   ]);
   document.querySelectorAll("button, textarea, select, input").forEach((el) => {
+    if (el.closest("#mission_review_panel")) return; // Mission controls follow their own phase and request state.
     if (alwaysEnabled.has(el.id) || el.hasAttribute("data-theme-toggle") || el.hasAttribute("data-state-action") || el.classList.contains("btn-close") ||
       el.hasAttribute("data-column-maximize") || el.dataset.bsDismiss === "offcanvas" ||
       el.dataset.bsToggle === "collapse") {
