@@ -51,6 +51,26 @@ and authoritative while the regulation layer develops.
 
 ### Disaster mission configuration prototype
 
+Open [Rooms](http://localhost:8080/valerian/rooms.html) to build, name, save and
+reopen rooms before creating a mission or connecting an agent. The access screen
+and cockpit also link to Rooms. The library is local to the current browser and
+server address; export/import JSON to move layouts elsewhere. Each save retains
+earlier numbered revisions. In mission task review, enter a mission name and
+select a saved room to save its snapshot with the task in the scoped database.
+Reopen named missions through **Saved missions**; later library edits do not
+change their rooms. Running these saved missions is the next planned increment.
+See the
+[room library guide](.doc/valerian-room-simulation.md#independent-room-library).
+
+The Valerian mission workspace also includes a browser-local room builder and
+text/visual printed-fire-indicator simulator: square, rectangular and L-shaped
+rooms, stateful doors, wall pictures/windows, furniture and smoke-limited
+perception. See the [task specification and room simulation walkthrough](.doc/valerian-room-simulation.md).
+Define the task using dropdowns/text and start autonomous execution; no speech or
+model provider is required. Save/reload layouts per mission in the browser,
+import/export room files and download run evidence. Unsaved layouts and active
+timelines reset on reload/disconnect; this local simulator grants no physical authority.
+
 The `core.disaster_mission_configuration` agent captures inspection missions,
 requests missing details, recommends a physical embodiment and emits a reviewable
 JSON mission record. Incomplete or unsafe configurations cannot become ready;
@@ -362,6 +382,10 @@ main baseline catalog.
   transcription, and output-only Speech synthesis.
 
 ## Local Setup
+
+For the Windows Java/MySQL installation, startup troubleshooting, Valerian
+access-code setup and room-builder workflow, see the
+[Windows Valerian setup guide](.doc/windows-valerian-setup.md).
 
 Copy the template files and adjust them for your machine:
 

@@ -7,6 +7,36 @@ Status: active traceability baseline (2026-10-31); design evidence in `DM_UC_RES
 Bind dozent expectations to concrete milestones, use cases, tests and evidence
 artifacts so progress remains auditable.
 
+## New input mapping (2026-11-06)
+
+Source: `inputs/2026-11-06-newValeriaTasks.txt`. Detailed acceptance and evidence
+targets: `PLAN_VALERIAN_TASK_SIMULATION.md`. These extend the baseline; prior
+DM closure does not close these requirements.
+
+| Requirement | Milestone | Planned evidence |
+| --- | --- | --- |
+| VT-R01: one-task verbal specification and sensing/behaviour capabilities | VT-01, VT-05 | Reviewed specification, clarification examples, verbal interaction evaluation |
+| VT-R02: injected events become perceptions and simulated behaviour with text outcomes | VT-02, VT-05 | Trigger/action timeline, success and locked-door failure |
+| VT-R03: square/rectangle/L room builder; multiple stateful doors; wall windows/pictures; chairs/tables; robot start | VT-03 | Generated examples for all three shapes and placement validation |
+| VT-R04: robot position/actions agree with text and door results | VT-04 | Event-correlated visual/text run |
+| VT-R05: clear-air visibility/occlusion and smoke limited to one field ahead | VT-03, VT-04 | Clear-air, L-corner and smoke perception scenarios |
+| VT-R06: simulation validates specification feasibility as supporting research evidence | VT-05 | Integrated walkthrough and separately reported interaction/simulation findings |
+
+Implementation evidence: `VT_RESULTS.md` records delivered browser-local
+VT-01 through VT-05 software. The user's later scope correction replaces VT-R01's
+verbal input with dropdown/text input and requires autonomous execution from the
+saved task. Five widget cases plus one real scoped backend/browser journey verify
+task capture, persisted completeness, capability review and autonomous door/photo/
+report outcomes; fourteen Node cases cover engine/contract behaviour. No speech,
+provider or hardware evidence is required or claimed for this corrected VT scope.
+Qualitative human usability review remains separate.
+
+VT-06 follow-up maps reusable scenarios to validated per-mission browser drafts
+and portable room-only files, plus task-bound run reports. `VT_RESULTS.md`
+records 19 Node cases, 7 widget cases and 1 real-backend/report case; exported
+initial scenes reproduce identical events. Saved layouts persist locally;
+running executions are neither synchronized nor restored from these files.
+
 ## Traceability units
 
 - Requirement IDs: DR-01 ... DR-05

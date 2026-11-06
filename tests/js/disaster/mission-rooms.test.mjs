@@ -1,0 +1,21 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {createRoom,place} from '../../../src/main/resources/public/valerian/room-simulation.js';
+import {saveLibraryRoom} from '../../../src/main/resources/public/valerian/room-library.js';
+import {savedRoomSelection,validateMissionDetails} from '../../../src/main/resources/public/valerian/mission-rooms.js';
+import {taskSpecification,taskSpecificationText} from '../../../src/main/resources/public/valerian/task-specification.js';
+test('a mission selection captures a specific saved room version and remains usable without the library',()=>{
+  const data=new Map(),storage={getItem:k=>data.get(k)??null,setItem:(k,v)=>data.set(k,v)};
+  const room=createRoom();place(room,'door',1,0,{locked:true});
+  const first=saveLibraryRoom(storage,{name:'Training A',room});
+  const mission=validateMissionDetails({name:' Mission A ',room:savedRoomSelection(storage,first.id,1)});
+  room.smoke=true;saveLibraryRoom(storage,{id:first.id,expectedRevision:1,name:'A revised',room});
+  assert.equal(mission.name,'Mission A');assert.equal(mission.room.revision,1);
+  assert.equal(JSON.parse(mission.room.configuration).room.smoke,false);
+  data.clear();assert.deepEqual(validateMissionDetails(mission),mission);
+  assert.throws(()=>validateMissionDetails({name:'',room:mission.room}),/mission name/);
+  assert.throws(()=>validateMissionDetails({name:'A',room:{...mission.room,configuration:'{}'}}));
+  const specification=taskSpecification({missionType:'fire_hotspot_inspection',objective:'Find printed fire indicator',environment:'indoor_flat',revision:1},{savedRoom:mission.room});
+  assert.equal(specification.room.binding,'saved_definition');assert.equal(specification.room.savedRoomRevision,1);
+  assert.equal(specification.execution.started,false);assert.match(taskSpecificationText(specification),/Saved layout: Training A, revision 1/);
+});

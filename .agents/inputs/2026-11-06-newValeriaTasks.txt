@@ -1,0 +1,16 @@
+One Task
+Required Sensing and Behaviour Capabilities
+Specification Interaction: Human - Machine verbal interaction resulting in a task specification (Json? MD?)
+Execution Mode: 
+Prometheus-Like UI showing what the robot senses and what behaviour it produces
+"Simulation" wo Mensch zu Demonstrationszwecken folgendes kann: auslösen von ereignissen, welche dann im Prometheus-Like UI zu wahrnehmungen führen und am ende zu verhalten.
+Execution mode is nur eine validierung/demo-umgebung, contribnution ist die machbarkeit der mensch maschinen interaktion zwecks spezifikation einer aufgabe. Das zeigen dass diese aufgabe dann sinnvoll ausgeführt werden kann ist "nur" eine validierung dieser machbarkeit
+
+the simulation shall be a text based one and a visual one. the text based one gives us outputs what the robot is doind. especially triggers and outputs like fetch if he needs to fetch things or a open_door if he opens a door, pick_up if he picks something up, take_photo to take a photo etc. so those things that we dont actaully implement but just pretend like we do the.
+Than in the visual part i want an editor firstly where i create a room. i can select from 3 different room types. a square one, a l shaped one and a rectangel one. than i want to be able to put the door in, possible even multiple and give them a state, locked or unlocked + open or closed. 
+than i want to be able to add windows, non fire pictures and fire pictures to the walls. also i want to place chairs and tables in the room. all those things can be placed anywhere or you can make a system with predefined slots where an item can be. like i select a table and the programm shows me slots in the room where i can place that item. this might be easier to implement, whatever works. 
+than i want to generate the room. ah yea also place the robot at some starting location.
+
+than when the simulation starts the visual part should show where the robot is and what its doing. the text part than shows what the visual is showing aswell. it trys to open a door, the text says: open_door. than also if that successfull or not (if its locked its not). 
+lastly i want to be able to set visibility. if there is no smoke the robot should be able to see the whole room more or less (maybe not all in the L shaped one. than it can go to the fire picture directly. 
+But if i toggle smoke on in the room builder the robot only sees one field (1 meter for example) infront of itself. 

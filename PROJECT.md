@@ -75,6 +75,56 @@ and regulation diagnostics remain future work.
 
 ### Current milestone state
 
+- Next Valerian workflow (2026-11-06): user accepts the room builder. Complete
+  VT-07 independent browser-local named room library at `/valerian/rooms.html`,
+  accessible before login/mission creation, with immutable saved revisions and
+  JSON transfer. Passed 22 Node and 13 browser cases and live checks on both
+  running servers; evidence `.agents/VT07_RESULTS.md`. VT-08 is complete:
+  named missions save current task inputs and validated selected room snapshots
+  atomically in scoped backend Storage; list/reopen restores the task and room,
+  and explicit room updates invalidate approval. Passed 11 Java tests, 23 Node
+  cases, 14 widget/lifecycle cases and 1 real-backend browser journey; evidence
+  `.agents/VT08_RESULTS.md`. The offline demo at port 49679 has been restarted
+  with its existing database/password setting; port 8080 requires a separate
+  restart to load the Java changes. Planned VT-09 saved-mission Run restores
+  and displays that room -> VT-10 revised mission inputs with observable
+  simulation effects (field/behaviour decisions deferred to the user).
+  Next implementation task is VT-09. VT-09/10 remain open.
+  Tasks and acceptance: `.agents/PLAN_VALERIAN_TASK_SIMULATION.md`;
+  status: `.agents/GITHUB_ISSUE_BACKLOG.md`.
+
+- Windows setup handoff (2026-11-06): user confirmed creating local Valerian
+  access code `ROOM1` after admin setup, intended for
+  `core.disaster_mission_configuration`. For reconnecting this installation or
+  helping a friend install Java 21/MySQL, configure the local database, create
+  access codes and open the room builder, read `.doc/windows-valerian-setup.md`.
+  The guide distinguishes confirmed setup from unverified simulation execution;
+  no database password or admin token is recorded.
+
+- Supervisor testing configuration (2026-11-06): current local demo disables
+  supervisor password input/checks while retaining review controls and audit.
+  Re-enable with `prometheus.supervisor.credential-required=true` and restart;
+  the general default remains true. Passed 7 focused Java tests, 9 widget browser
+  cases and a real-backend passwordless approve/revoke/reject/start journey.
+  Details: `.doc/mission-supervisor-review.md`.
+
+- Valerian task simulation (2026-11-06): VT-02/03/04 browser-local software is
+  implemented: shared text/visual events, square/rectangle/L room builder,
+  stateful doors, wall pictures/windows, furniture, robot start and smoke-limited
+  visibility. User-corrected VT-01/VT-05 scope is complete for dropdown/text task
+  setup followed by autonomous execution, without speech or a model provider.
+  Unlocked doors open automatically; locked doors fail once and search replans
+  or reports blocked. Pause/resume/stop and bounded smoke search are verified.
+  Passed 14 Node cases, 5 widget browser cases and 1 real-backend Chrome journey
+  through persisted form input and autonomous completion; temporary test agent removed.
+  VT-06 adds per-mission browser save/load, validated portable room files and
+  downloadable run reports (task, initial/final world and event outcomes). Passed
+  19 Node cases, 7 widget browser cases and 1 real-backend report journey.
+  Unsaved layouts/runs reset on reload/disconnect; saved layouts persist in the
+  browser and can be exported. Active runs are not shared between windows. See
+  `.agents/VT_RESULTS.md`, `.agents/PLAN_VALERIAN_TASK_SIMULATION.md` and the
+  canonical backlog. Existing authenticated simulation and hardware gates remain separate.
+
 - Disaster software sequence (2026-10-31): DM-03 platform declarations, DM-04
   individual scope-bound supervisor review, DM-05 local simulator handoff and
   integrated DM-INT demonstrator are complete for their bounded software scopes.

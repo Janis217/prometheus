@@ -19,6 +19,8 @@ export function missionText(mission) {
     `Status: ${label(mission.approvalState)} · Revision ${mission.revision}`,
     `Robot: ${label(mission.selectedEmbodiment)} · Terrain: ${label(mission.environment)} · Priority: ${label(mission.priority)}`];
   for (const key of ['searchBoundary', 'risks', 'operatingConditions']) if (mission[key]) lines.push(`${label(key)}: ${mission[key]}`);
+  if (mission.requiredPerception?.length) lines.push(`Required sensing: ${mission.requiredPerception.join(', ')}`);
+  if (mission.requiredBehavior?.length) lines.push(`Required behaviour: ${mission.requiredBehavior.join(', ')}`);
   if (mission.missingInformation?.length) lines.push(`Still needed: ${mission.missingInformation.map(label).join(', ')}`);
   if (mission.platformSafety?.declarations) lines.push('Operator declarations:', ...Object.entries(mission.platformSafety.declarations)
     .map(([key, value]) => `• ${label(key)}: ${label(value)}`));

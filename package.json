@@ -2,6 +2,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test:mission:rooms": "playwright test --config=playwright.config.mjs tests/playwright/mission-room-integration.spec.mjs",
+    "test:room:unit": "node --test tests/js/disaster/*.test.mjs",
+    "test:room:browser": "playwright test --config=playwright.config.mjs tests/playwright/room-workspace.spec.mjs tests/playwright/room-library.spec.mjs",
     "test:live:unit": "node --test tests/js/live/*.test.mjs",
     "test:transcription:unit": "node --test tests/js/transcription/*.test.mjs",
     "test:speech:unit": "node --test tests/js/speech/*.test.mjs",

@@ -33,6 +33,9 @@ prometheus.behaviour.speculation.ttl-ms=30000
 # admin access-code management
 prometheus.admin.token=
 
+# Supervisor review remains available. Set false only to omit its password during testing.
+prometheus.supervisor.credential-required=true
+
 # Experimental GPT-Live sessions (separate from live transcription).
 # Requires OpenAI credentials in openai.properties. Disabled until explicitly enabled.
 prometheus.live.enabled=false

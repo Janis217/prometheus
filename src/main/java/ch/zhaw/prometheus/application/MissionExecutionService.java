@@ -38,7 +38,7 @@ public class MissionExecutionService {
                     || input.reviewVersion() != review.reviewVersion() || !input.safetyReference().equals(review.safetyReference())
                     || policy.storage().containsKey(DisasterMissionSimulation.KEY)) throw new IllegalArgumentException("Stale or rehearsal-only mission");
             return FireMissionExecution.start(policy.storage(), JsonParser.parseString(review.mission()).getAsJsonObject(),
-                    review.reviewVersion(), review.safetyReference(), input.requestId(), input.variant(), reviewer.getId().toString(), System.currentTimeMillis());
+                    review.reviewVersion(), review.safetyReference(), input.requestId(), input.variant(), reviewer.id().toString(), System.currentTimeMillis());
         });
     }
 

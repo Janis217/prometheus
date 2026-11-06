@@ -28,6 +28,7 @@ public class DisasterMissionPolicy extends NoOpPolicy {
         return onStart(state, events, assembler, gateway);
     }
     @Override public void reset() {
+        SavedMissionDetails.clear(missionStorage);
         DisasterMissionSimulation.clear(missionStorage);
         FireMissionExecution.clear(missionStorage);
         DisasterMission.reset(missionStorage);

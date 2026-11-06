@@ -31,8 +31,105 @@ The checklist at the top is the high-level milestone tracker. Codex must keep it
 - [x] DM-04: Supervisor Approval
 - [x] DM-05: Simulation Handoff (simulation software; operational model gate open)
 - [ ] DM-06: Physical Embodiment Pilot
+- [x] VT-01: One-task specification via dropdowns/text and capability contract
+- [x] VT-02: Text simulation, injected perceptions and action outcomes (browser-local demo)
+- [x] VT-03: Visual room builder (one-metre grid slots)
+- [x] VT-04: Synchronized visual execution and smoke visibility (browser-local demo)
+- [x] VT-05: Integrated structured-input demonstration and autonomous execution (bounded software acceptance)
+- [x] VT-06: Reusable room scenarios and exportable run evidence
+- [x] VT-07: Independently saved rooms, available before mission creation (browser-local library)
+- [x] VT-08: Mission building and saving with a selected saved room
+- [ ] VT-09: Run a saved mission with its room restored and displayed
+- [ ] VT-10: Redesign mission inputs and connect them to simulation behaviour (details pending)
 
 The checklist above is the summary view. The detailed milestone states and evidence follow below.
+
+## Valerian task intake (2026-11-06)
+
+VT-08 complete (2026-11-06): select/preview a saved room during mission review,
+name the mission, and persist its room revision/snapshot with task configuration
+in one scoped database transaction. Add named saved-mission listing/reopening;
+retain old task-only creation. Passed 11 focused Java tests, 23 Node cases,
+9 room/mission widget cases, 5 connection lifecycle cases and the real scoped
+database/browser journey (two missions, full snapshot/reload, explicit room
+update, library removal, stale/invalid rejection and chunked storage). Restarted
+only the existing offline demo on port 49679, preserving its database/password
+mode; port 8080 needs its own restart. Evidence: `VT08_RESULTS.md`.
+Next is VT-09 integrated Run; VT-10 input semantics remain deferred.
+
+VT-07 complete (2026-11-06): independent Rooms page using the existing builder,
+with a browser-local named library and immutable saved revisions. Scope is
+explicitly per origin/browser, independent of login and agent instances;
+JSON import/export transfers layouts. Backend room synchronization is not
+part of this increment. Passed 22 room Node cases and 13 browser cases; live
+save/reload/reopen checks passed on ports 49679 and 8080, with no page errors.
+Mobile screenshot inspected. Evidence: `VT07_RESULTS.md`. The subsequent VT-08
+completion is recorded above; VT-09/10 remain planned.
+
+New workflow intake (2026-11-06): the user accepts the room builder and requests
+the next integration sequence: create/save a room independently, create/save a
+mission using that room and the current mission information, then select/run the
+saved mission with its room displayed again. Later, change mission inputs and
+make their agreed meanings affect simulation. Recorded as planned VT-07–VT-10
+with tasks, dependencies and acceptance criteria in
+`PLAN_VALERIAN_TASK_SIMULATION.md`. Start next with VT-07; VT-10's exact fields
+and effects await later user decisions. No implementation is claimed. Existing
+VT-06 browser drafts per mission and JSON exports do not satisfy this new saved
+room/mission workflow. Room storage location is an implementation decision to
+resolve explicitly, not an already agreed backend requirement.
+
+Supervisor testing mode update (2026-11-06): the user requested keeping supervisor
+review while disabling password input for testing. Implemented reversible
+`prometheus.supervisor.credential-required` (default true); current local runtime
+is explicitly false. Review and simulator-start checks share the mode, the UI
+hides the field based on backend metadata, and audits distinguish testing from
+individual credential authentication. Access-code scope, mission completeness,
+version checks and explicit decisions remain enforced. Passed 3 focused auth
+unit tests, 4 existing mission tests, 9 widget browser cases and 1 real-backend
+passwordless review/start case. Temporary test agent cleaned up; existing
+credentials, missions and history retained. See `.doc/mission-supervisor-review.md`.
+
+VT-06 follow-up (2026-11-06): the user requested the next increment after
+autonomous execution. Add per-mission browser save/load, portable validated room
+JSON and run reports containing the original task/room, final state and event
+timeline. Complete: nineteen Node cases, seven widget browser cases and one real
+scoped backend/report journey passed. Its temporary backend agent was removed.
+Scope remains structured task
+input and local simulation, with no speech or provider dependency.
+
+Initial intake queued VT-01 through VT-05; the user authorized implementation
+in the subsequent turn. Scope, todos,
+dependencies and acceptance criteria for each milestone are in
+`PLAN_VALERIAN_TASK_SIMULATION.md`; the verbatim source is retained in
+`inputs/2026-11-06-newValeriaTasks.txt`.
+
+The primary contribution is human-machine specification of one task,
+including sensing and behaviour capabilities. Text and visual room simulation
+provide supporting validation. The new sequence is VT-01 -> VT-02 -> VT-03 ->
+VT-04 -> VT-05, with contracts established before dependent implementation.
+Prior DM software completions remain historical evidence, not acceptance of
+these new requirements. The DM-02 real-model gate remains open; physical DM-06
+is separate.
+
+Implementation update (2026-11-06): VT-02/03/04 are complete for the bounded
+browser-local software demo. VT-01 has a JSON/readable capability contract,
+clarification projection, printed-target extraction guidance and revision-bound
+room snapshot; actual spoken interpretation remains unverified. VT-05 has a
+repeatable walkthrough and fixture scenarios; research interaction evaluation
+remains open. Evidence: `VT_RESULTS.md`. Rooms/runs are per-window, reset on
+reload/disconnect, and grant no authenticated or physical authority. The legacy
+DM-05 adapter is retained separately. No provider configuration, commit or deployment.
+
+User scope correction and acceptance (2026-11-06): task definition uses dropdowns
+and text fields, with no speech-to-text or model interpretation. VT-01 and VT-05
+are complete for that structured-input software scope: a real scoped form-save
+journey persisted the task, then the robot executed autonomously through door
+opening, approach, photo and report. Five widget browser cases and fourteen Node
+tests passed, plus one real-backend Chrome acceptance case with its own temporary
+agent cleaned up. Pause/resume/stop, revised-task invalidation and bounded smoke
+search are verified. See `VT_RESULTS.md` and `.doc/valerian-room-simulation.md`.
+This supersedes the verbal-gate statements above for VT only; historical DM-02
+provider/hardware gates and human qualitative review remain separate.
 
 Review policy (2026-10-30): retain completed entries and reconcile the next open
 entry against its existing code, plan and results before implementing anything.

@@ -1,4 +1,5 @@
 import { label } from './mission-presentation.js';
+import { mountMissionRoomPicker } from './mission-rooms.js';
 
 export const demoFields = {missionType:'fire_hotspot_inspection', objective:'Find printed fire indicator', priority:'low',
   location:'R-204', environment:'indoor_flat', risks:'printed image only; no actual fire',
@@ -17,16 +18,19 @@ const questions = [
   ['operatingConditions','What operating conditions and stop rules apply?'],
   ['safetyAssessment','Have hazards, mitigations, robot suitability and applicable clearances been assessed?', ['unknown','safe','unsafe']],
 ];
-export function mountMissionWizard(root, {save, getMission}) {
-  let fields = {}, evidence = {}, robot = '', step = 0, expectedRevision = 0;
+export function mountMissionWizard(root, {save, getMission, getSavedMission=()=>null}) {
+  let fields = {}, evidence = {}, robot = '', step = 0, expectedRevision = 0, roomDraft=null;
   root.innerHTML = `<div class="d-flex flex-wrap gap-2"><button type="button" class="btn btn-primary" data-testid="mission-create">Create task</button>
     <button type="button" class="btn btn-outline-ink" data-testid="mission-demo">Load R-204 demo</button></div>
-    <p class="small mt-2">Answer the questions or use demo answers. Only the R-204 scenario has a simulator.</p>
+    <p class="small mt-2">Answer the questions or use demo answers. The room builder simulates printed fire-indicator inspection on flat indoor terrain. The scripted demo uses R-204.</p>
     <form data-testid="mission-wizard" hidden class="mt-3"></form><p role="status" data-testid="mission-config-status"></p>`;
   const form = root.querySelector('form'), status = root.querySelector('[role="status"]');
-  function steps() { return [...questions, ...requiredChecks(fields.environment).map(key => [key, `Confirm: ${label(key)}`, ['unknown','confirmed','failed']])]; }
+  function steps() { return [...questions.map(question => question[0]==='objective' && fields.missionType==='fire_hotspot_inspection'
+    ? ['objective','Which inspection task should the robot perform?', ['Find printed fire indicator','Inspect thermal hotspots']]
+    : question), ...requiredChecks(fields.environment).map(key => [key, `Confirm: ${label(key)}`, ['unknown','confirmed','failed']])]; }
   function start(demo) {
     const previous = getMission(); expectedRevision = previous?.revision ?? 0;
+    roomDraft=structuredClone(getSavedMission());
     fields = demo ? {...demoFields} : Object.fromEntries(Object.keys(demoFields).map(key => [key, previous?.[key] || '']));
     evidence = demo ? Object.fromEntries(requiredChecks('indoor_flat').map(key => [key,'confirmed'])) : {...previous?.platformSafety?.declarations};
     robot = demo ? 'ground robot' : robots[fields.environment] || ''; step = demo ? steps().length : 0;
@@ -34,6 +38,7 @@ export function mountMissionWizard(root, {save, getMission}) {
   }
   function render() {
     const all = steps(), final = step >= all.length;
+    let roomPicker=null;
     form.replaceChildren();
     const heading = document.createElement('h3'); heading.className = 'h6';
     heading.textContent = final ? 'Review your answers' : `Question ${step + 1} of ${all.length}`; form.append(heading);
@@ -44,6 +49,10 @@ export function mountMissionWizard(root, {save, getMission}) {
         term.textContent = key === 'robot' ? 'Robot' : label(key); definition.textContent = label(value); list.append(term,definition);
       }
       form.append(list);
+      const roomRoot=document.createElement('section');form.append(roomRoot);
+      roomPicker=mountMissionRoomPicker(roomRoot,roomDraft,{defaultName:fields.location?`${fields.location} inspection`:'Room inspection',onChange:value=>{
+        roomDraft=value;const confirm=form.querySelector('[data-testid="mission-confirm"]');if(confirm)confirm.checked=false;
+      }});
       const confirmation = document.createElement('label'); confirmation.className = 'd-block my-2';
       const checkbox = document.createElement('input'); checkbox.type = 'checkbox'; checkbox.required = true;
       checkbox.dataset.testid = 'mission-confirm'; confirmation.append(checkbox, ' I reviewed these answers and explicitly confirm the selected safety declarations for this mission.');
@@ -82,7 +91,7 @@ export function mountMissionWizard(root, {save, getMission}) {
       event.preventDefault();
       if (!final) { remember(); step++; render(); return; }
       next.disabled = true;
-      try { await save({expectedRevision, fields, platformEvidence: evidence, robot}); form.hidden = true;
+      try { await save({expectedRevision, fields, platformEvidence: evidence, robot,savedMission:roomPicker.read()}); form.hidden = true;
         status.textContent = 'Task saved. Review the summary below. Complete tasks need separate supervisor approval.';
       } catch (error) { status.textContent = error.message; }
       finally { next.disabled = false; }

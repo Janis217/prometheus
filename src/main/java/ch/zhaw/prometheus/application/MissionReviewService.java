@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.server.ResponseStatusException;
@@ -26,19 +27,24 @@ public class MissionReviewService {
         @Override public String toString() { return "Credential[id=" + id + ", scopeId=" + scopeId + ", token=<redacted>]"; }
     }
     public record Decision(UUID requestId, int revision, int reviewVersion, String safetyReference, String decision) {}
-    public record Review(String mission, int reviewVersion, String safetyReference) {}
+    public record Review(String mission, int reviewVersion, String safetyReference, boolean supervisorCredentialRequired,
+            SavedMissionDetails.Saved savedMission) {}
+    record Reviewer(UUID id, String name, boolean authenticated) {}
     public record Configuration(int expectedRevision, java.util.Map<String, String> fields,
-            java.util.Map<String, String> platformEvidence, String robot) {}
+            java.util.Map<String, String> platformEvidence, String robot, SavedMissionDetails.Input savedMission) {}
     private final MissionSupervisorRepository supervisors;
     private final AccessCodeRepository scopes;
     private final AgentRepository agents;
     private final AgentApplicationService agentService;
     private final TransactionTemplate transaction;
+    private final boolean credentialRequired;
 
     public MissionReviewService(MissionSupervisorRepository supervisors, AccessCodeRepository scopes,
-            AgentRepository agents, AgentApplicationService agentService, PlatformTransactionManager transactions) {
+            AgentRepository agents, AgentApplicationService agentService, PlatformTransactionManager transactions,
+            @Value("${prometheus.supervisor.credential-required:true}") boolean credentialRequired) {
         this.supervisors = supervisors; this.scopes = scopes; this.agents = agents;
         this.agentService = agentService; this.transaction = new TransactionTemplate(transactions);
+        this.credentialRequired = credentialRequired;
     }
 
     public Credential provision(Provision input) {
@@ -63,7 +69,7 @@ public class MissionReviewService {
             checkScope(id, code);
             var agent = agents.findById(id).orElseThrow(() -> failure(HttpStatus.NOT_FOUND));
             var mission = mission(agent.getStorage());
-            return new Review(mission.toString(), version(agent.getStorage()), safetyReference(mission));
+            return review(mission, agent.getStorage());
         }));
     }
 
@@ -71,6 +77,9 @@ public class MissionReviewService {
     public Review configure(UUID id, String code, Configuration input) {
         if (input == null || input.fields() == null || input.platformEvidence() == null || input.robot() == null)
             throw failure(HttpStatus.BAD_REQUEST);
+        SavedMissionDetails.Input selected;
+        try { selected = input.savedMission() == null ? null : SavedMissionDetails.validate(input.savedMission()); }
+        catch (RuntimeException invalid) { throw failure(HttpStatus.BAD_REQUEST); }
         var draft = new JsonObject();
         for (var entry : input.fields().entrySet()) {
             if (!DisasterMission.FIELDS.contains(entry.getKey()) || entry.getValue() == null || entry.getValue().length() > 300)
@@ -96,20 +105,20 @@ public class MissionReviewService {
             if (!input.robot().equals(DisasterMission.text(evaluated, "selectedEmbodiment"))
                     || DisasterMission.text(evaluated, "question").startsWith("Please shorten")) throw failure(HttpStatus.BAD_REQUEST);
             policy.storage().put(DisasterMission.KEY, evaluated);
+            var existing = SavedMissionDetails.read(agent.getStorage());
+            var details = selected != null ? selected : existing == null ? null : new SavedMissionDetails.Input(existing.name(), existing.room());
+            if (details != null) SavedMissionDetails.write(policy.storage(), details, input.expectedRevision() + 1);
             agents.saveAndFlush(agent);
-            return new Review(evaluated.toString(), version(agent.getStorage()), safetyReference(evaluated));
+            return review(evaluated, agent.getStorage());
         }));
     }
 
     public Review decide(UUID id, String code, String token, Decision input) {
         if (input == null || input.requestId() == null || input.safetyReference() == null || input.decision() == null
                 || !List.of("approve", "reject", "revoke").contains(input.decision())) throw failure(HttpStatus.BAD_REQUEST);
-        if (token == null || token.isBlank() || token.length() > 200) throw failure(HttpStatus.UNAUTHORIZED);
         return agentService.serialized(id, () -> transaction.execute(status -> {
             UUID scopeId = checkScope(id, code);
-            var supervisor = supervisors.findByTokenDigest(digest(token)).filter(MissionSupervisor::isEnabled)
-                    .orElseThrow(() -> failure(HttpStatus.UNAUTHORIZED));
-            if (!supervisor.getScopeId().equals(scopeId)) throw failure(HttpStatus.FORBIDDEN);
+            var supervisor = authenticate(id, code, token);
             var agent = agents.findById(id).orElseThrow(() -> failure(HttpStatus.NOT_FOUND));
             var values = agent.getStorage(); var mission = mission(values);
             int version = version(values); String reference = safetyReference(mission);
@@ -117,12 +126,12 @@ public class MissionReviewService {
             for (var entry : values.entrySet()) if (entry.getKey().startsWith(AUDIT)) {
                 var audit = entry.getValue().getAsJsonObject();
                 if (input.requestId().toString().equals(DisasterMission.text(audit, "requestId"))) {
-                    if (!supervisor.getId().toString().equals(DisasterMission.text(audit, "supervisorId"))
+                    if (!supervisor.id().toString().equals(DisasterMission.text(audit, "supervisorId"))
                             || !input.decision().equals(DisasterMission.text(audit, "decision"))
                             || input.revision() != audit.get("revision").getAsInt()
                             || input.reviewVersion() != audit.get("expectedVersion").getAsInt()
                             || !input.safetyReference().equals(DisasterMission.text(audit, "safetyReference"))) throw failure(HttpStatus.CONFLICT);
-                    return new Review(mission.toString(), version, reference);
+                    return review(mission, values);
                 }
             }
             if (input.revision() != mission.get("revision").getAsInt() || input.reviewVersion() != version
@@ -137,8 +146,9 @@ public class MissionReviewService {
             });
             var audit = new JsonObject();
             audit.addProperty("requestId", input.requestId().toString());
-            audit.addProperty("supervisorId", supervisor.getId().toString());
-            audit.addProperty("supervisorName", supervisor.getName());
+            audit.addProperty("supervisorId", supervisor.id().toString());
+            audit.addProperty("supervisorName", supervisor.name());
+            audit.addProperty("authenticationMode", supervisor.authenticated() ? "credential" : "password_disabled_for_testing");
             audit.addProperty("scopeId", scopeId.toString());
             audit.addProperty("revision", input.revision());
             audit.addProperty("expectedVersion", version);
@@ -149,7 +159,7 @@ public class MissionReviewService {
             var policy = (DisasterMissionPolicy) agent.getCurrentState().ownPolicy();
             policy.recordReview(evaluated, AUDIT + (version + 1), audit);
             agents.saveAndFlush(agent);
-            return new Review(evaluated.toString(), version + 1, reference);
+            return review(evaluated, agent.getStorage());
         }));
     }
 
@@ -160,15 +170,20 @@ public class MissionReviewService {
         if (!scope.getLinked()) throw failure(HttpStatus.NOT_FOUND);
         return scope.getId();
     }
-    MissionSupervisor authenticate(UUID id, String code, String token) {
+    Reviewer authenticate(UUID id, String code, String token) {
         UUID scopeId = checkScope(id, code);
+        if (!credentialRequired) return new Reviewer(UUID.nameUUIDFromBytes(
+                ("testing-supervisor:" + scopeId).getBytes(StandardCharsets.UTF_8)), "Testing supervisor (password disabled)", false);
         if (token == null || token.isBlank() || token.length() > 200) throw failure(HttpStatus.UNAUTHORIZED);
         var supervisor = supervisors.findByTokenDigest(digest(token)).filter(MissionSupervisor::isEnabled)
                 .orElseThrow(() -> failure(HttpStatus.UNAUTHORIZED));
         if (!scopeId.equals(supervisor.getScopeId())) throw failure(HttpStatus.FORBIDDEN);
-        return supervisor;
+        return new Reviewer(supervisor.getId(), supervisor.getName(), true);
     }
     UUID scopeId(UUID id, String code) { return checkScope(id, code); }
+    private Review review(JsonObject mission, java.util.Map<String, com.google.gson.JsonElement> values) {
+        return new Review(mission.toString(), version(values), safetyReference(mission), credentialRequired, SavedMissionDetails.read(values));
+    }
     private static JsonObject mission(java.util.Map<String, com.google.gson.JsonElement> values) {
         if (!values.containsKey(DisasterMission.KEY)) throw failure(HttpStatus.NOT_FOUND);
         var stored = values.get(DisasterMission.KEY).getAsJsonObject();

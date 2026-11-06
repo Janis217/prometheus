@@ -24,6 +24,10 @@ public class DisasterMissionAction extends Action {
             Preserve proper names and location identifiers exactly.
             Use unknown for absent or uncertain facts. Never invent safety, boundaries or clearances.
             missionType: fire_hotspot_inspection, missing_person_search, rubble_assessment, unknown.
+            For a task explicitly about finding a printed fire indicator/picture in a room,
+            use missionType fire_hotspot_inspection and objective "Find printed fire indicator".
+            This is a simulated visual target, not a real fire or thermal hotspot.
+            Do not convert ambiguous fire/hotspot requests into a printed-picture task.
             priority: low, medium, high, critical, unknown.
             environment: outdoor_open, indoor_flat, indoor_rubble, unknown.
             safetyAssessment: safe ONLY if operator explicitly confirms assessed hazards, mitigations,

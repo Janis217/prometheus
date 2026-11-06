@@ -4,6 +4,21 @@ Status: active planning bundle (2026-10-31)
 
 This file is the entry point for the dozent-aligned planning package.
 
+## Latest input: Valerian task specification and room simulator (2026-11-06)
+
+The user's new inputs are tracked as VT-01 through VT-05 in the canonical backlog.
+VT-01 through VT-06 browser-local software is verified for the user's corrected
+scope: dropdown/text specification followed by autonomous simulation, without
+speech or inference. See `VT_RESULTS.md` for evidence and boundaries.
+VT-06 adds reusable saved/imported rooms and downloadable simulation-run evidence.
+See `PLAN_VALERIAN_TASK_SIMULATION.md` for requirements, dependency order,
+todos and acceptance criteria, and `inputs/2026-11-06-newValeriaTasks.txt` for
+the verbatim source. The user's later explicit structured-input correction
+supersedes the source's verbal wording. This demo sequence uses one-task structured
+specification is the contribution; configurable text/visual simulation validates
+it. The earlier execution order below describes the DM roadmap and does not
+require physical DM-06 work before this simulator sequence.
+
 ## Planning objectives
 
 - make use-case derivation systematic and reviewable

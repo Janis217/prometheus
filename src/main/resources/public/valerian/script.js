@@ -40,7 +40,9 @@ async function ensureMissionReviewUi() {
     const { mountMissionReview } = await import("./mission-review.js");
     ({ readableMissionSpeech } = await import("./mission-presentation.js"));
     missionReviewUi = mountMissionReview(document.getElementById("mission_review_panel"),
-      () => ({ agentId: state.agentId, accessCode: state.accessCode }), { createNew: async () => {
+      () => ({ agentId: state.agentId, accessCode: state.accessCode }), { openSaved:async id=>{
+        await loadAgents();await selectAgent(id,{updateInput:true,updateSelect:true});await connectToAgent(id);
+      },createNew: async () => {
         const response = await scopedFetch("/demo/agents", { method: "POST", headers: {"Content-Type":"application/json"},
           body: JSON.stringify({agentDefinitionKey:"core.disaster_mission_configuration"}) });
         if (!response.ok) throw new Error("Unable to create a new mission instance.");
@@ -1141,6 +1143,11 @@ async function connectToAgent(agentId) {
   await loadAgentState();
   setControlsEnabled(true);
   updateConnectionButton();
+  const connectedUrl=new URL(window.location.href);
+  if(connectedUrl.search&&!connectedUrl.search.includes('='))connectedUrl.search='';
+  connectedUrl.searchParams.delete('agent');
+  connectedUrl.searchParams.set('agentId',selectedAgentId);
+  window.history.replaceState(null,'',`${connectedUrl.pathname}${connectedUrl.search}${connectedUrl.hash}`);
   connectBehaviourStream();
   connectMonitorStream();
 }
