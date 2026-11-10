@@ -17,7 +17,7 @@ async function access(request) {
 for (const variant of ["ordinary", "obstacle"]) test(`DM-INT authorized ${variant} fire lifecycle via Valerian simulator adapter`, async ({ page, request }, info) => {
   test.skip(!process.env.PROMETHEUS_ADMIN_TOKEN || !process.env.PROMETHEUS_LIVE_EXPECT_ENABLED, "Use isolated acceptance runner.");
   const credentials = await access(request);
-  await page.goto("/valerian/"); await page.getByTestId("access-code-input").fill(credentials.code); await page.getByTestId("submit-access-code").click();
+  await page.goto("/valerian/developer-cockpit.html"); await page.getByTestId("access-code-input").fill(credentials.code); await page.getByTestId("submit-access-code").click();
   await page.locator("#open_diagnostics").click(); await page.getByTestId("agent-type-select").selectOption(type);
   const pending = page.waitForResponse(response => response.url().endsWith("/demo/agents") && response.request().method() === "POST");
   await page.getByTestId("create-agent-instance").click(); const agent = await (await pending).json();
@@ -66,7 +66,7 @@ for (const variant of ["ordinary", "obstacle"]) test(`DM-INT authorized ${varian
   const headers = { "X-Prometheus-Access-Code": credentials.code };
   const stored = await request.get(`/demo/agents/${agent.id}/mission-execution`, { headers }); expect(stored.ok()).toBe(true); expect(await stored.json()).toEqual(final);
   await page.reload(); await page.locator("#open_diagnostics").click(); await page.getByTestId("agent-select").selectOption(agent.id);
-  await page.getByTestId("connect-agent").click(); await expect(page.getByTestId("agent-connection-state")).toContainText(`Connected to ${agent.id}`); await close();
+  await expect(page.getByTestId("agent-connection-state")).toContainText(`Connected to ${agent.id}`); await close();
   await page.getByText("Mission supervisor review", { exact: true }).click(); await page.getByTestId("mission-review-load").click();
   await expect(summary).toContainText('"phase": "closed"'); expect(JSON.parse(await summary.textContent())).toEqual(final);
   await info.attach("authorized-simulation-timeline", { body: JSON.stringify(timeline, null, 2), contentType: "application/json" });

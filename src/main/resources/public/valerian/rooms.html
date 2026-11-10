@@ -10,8 +10,8 @@
   <main>
     <nav><a href="./">← Valerian</a></nav>
     <h1>Rooms</h1>
-    <p>Build and save a room before creating a mission. No agent connection is needed.</p>
-    <p class="notice">Rooms are saved in this browser at this server address. Use Export / Import to move a layout to another browser or address. To create a mission, return to Valerian, connect to Disaster Mission Configuration, and select your saved room when reviewing the task.</p>
+    <p>Build a room for your next mission.</p>
+    <details><summary>Saving and sharing rooms</summary><p>Rooms are saved in this browser at this server address. Use Export / Import to move a layout to another browser or address. Return to your first tab, choose Start a mission, and select the saved room at the end of setup.</p></details>
     <section aria-label="Saved rooms">
       <h2>Saved rooms</h2>
       <div class="library-controls">
@@ -20,7 +20,7 @@
         <button id="refresh-rooms" type="button">Refresh list</button>
         <button id="new-room" type="button">New room</button>
       </div>
-      <p>Open saved room and New room replace the current layout. Save or export changes first.</p>
+      <details><summary>About room revisions</summary><p>Open saved room and New room replace the current layout. Save or export changes first. Saving an existing room adds a revision.</p></details>
       <label>Room name<input id="room-name" maxlength="80" placeholder="e.g. Training room A" autocomplete="off"></label>
       <div class="library-controls">
         <button id="save-room" type="button">Save new room</button>

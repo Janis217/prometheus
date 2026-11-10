@@ -7,6 +7,8 @@ const startCommand = process.platform === "win32"
 
 export default defineConfig({
   testDir: "./tests/playwright",
+  // The separate PHP site has its own server/configuration.
+  testIgnore: ["**/participate.spec.mjs"],
   // Keep generated/cleaned artifacts separate from user-supplied timing exports.
   outputDir: "./target/playwright-results",
   timeout: 90_000,

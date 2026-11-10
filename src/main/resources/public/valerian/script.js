@@ -1,3 +1,7 @@
+// Migrate old cockpit bookmarks to the clean entry screen, including cached HTML.
+const missionSetupMode=location.pathname.endsWith('/cockpit.html')&&new URLSearchParams(location.search).get('setup')==='mission';
+if (!missionSetupMode && !location.pathname.endsWith('/developer-cockpit.html') && document.getElementById('mission_review_panel'))
+  location.replace(new URL('index.html?view=missions',location.href).href);
 const state = {
   accessCode: null,
   agentTypes: [],
@@ -40,7 +44,7 @@ async function ensureMissionReviewUi() {
     const { mountMissionReview } = await import("./mission-review.js");
     ({ readableMissionSpeech } = await import("./mission-presentation.js"));
     missionReviewUi = mountMissionReview(document.getElementById("mission_review_panel"),
-      () => ({ agentId: state.agentId, accessCode: state.accessCode }), { openSaved:async id=>{
+      () => ({ agentId: state.agentId, accessCode: state.accessCode }), { separateSimulation:missionSetupMode,openSaved:async id=>{
         await loadAgents();await selectAgent(id,{updateInput:true,updateSelect:true});await connectToAgent(id);
       },createNew: async () => {
         const response = await scopedFetch("/demo/agents", { method: "POST", headers: {"Content-Type":"application/json"},
@@ -589,7 +593,7 @@ function openDetachedColumn(columnKey) {
 }
 
 function detachedColumnUrl(columnKey) {
-  const url = new URL("/valerian/", window.location.origin);
+  const url = new URL("/valerian/developer-cockpit.html", window.location.origin);
   url.searchParams.set("mode", "detached");
   url.searchParams.set("panel", columnKey);
   url.searchParams.set("agentId", state.agentId);

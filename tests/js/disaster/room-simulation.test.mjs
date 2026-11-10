@@ -100,3 +100,74 @@ test('incomplete and unsupported specifications do not start simulation',()=>{
   assert.throws(()=>startSimulation(createRoom(),null));
   assert.throws(()=>startSimulation(createRoom(),{...specification,specificationStatus:'needs_clarification'}));
 });
+
+test('mission controls change first/all goal and photo/observation evidence in the same room',()=>{
+  const room=createRoom();place(room,'fire_picture',1,0);place(room,'fire_picture',5,5);
+  function execute(options){
+    const run=startSimulation(room,{...specification,simulationOptions:{version:1,searchGoal:'first',evidence:'photo',doors:'open_unlocked',stepLimit:512,...options}});
+    for(let i=0;i<514&&run.phase==='running';i++)stepSimulation(run);
+    return run;
+  }
+  const first=execute({}),all=execute({searchGoal:'all'}),observed=execute({searchGoal:'all',evidence:'observation'});
+  assert.equal(first.phase,'completed');assert.equal(first.confirmed.length,1);
+  assert.equal(all.phase,'completed');assert.equal(all.confirmed.length,2);assert.equal(all.photographed.length,2);
+  assert.equal(observed.phase,'completed');assert.equal(observed.confirmed.length,2);assert.equal(observed.photographed.length,0);
+  assert.equal(observed.events.some(e=>e.action==='take_photo'),false);
+  assert.ok(observed.events.some(e=>e.action==='record_observation'));
+  assert.ok(all.autonomousSteps>first.autonomousSteps);
+  assert.deepEqual(room.robot,{x:0,y:0,heading:1});
+});
+
+test('door policy changes route/actions while leaving saved room unchanged',()=>{
+  const room=createRoom();place(room,'door',1,0);place(room,'fire_picture',5,0);
+  const execute=doors=>{
+    const run=startSimulation(room,{...specification,simulationOptions:{version:1,searchGoal:'first',evidence:'photo',doors,stepLimit:512}});
+    for(let i=0;i<514&&run.phase==='running';i++)stepSimulation(run);
+    return run;
+  };
+  const open=execute('open_unlocked'),avoid=execute('avoid_closed');
+  assert.equal(open.phase,'completed');assert.equal(avoid.phase,'completed');
+  assert.ok(open.events.some(e=>e.action==='open_door'));
+  assert.equal(avoid.events.some(e=>e.action==='open_door'),false);
+  assert.ok(avoid.events.some(e=>e.action==='move'&&e.pose.y>0));
+  assert.equal(room.objects[0].open,false);
+});
+
+test('step limit reports partial findings and rejects invalid or unsupported instructions',()=>{
+  const room=createRoom();place(room,'fire_picture',1,0);place(room,'fire_picture',5,5);
+  const options={version:1,searchGoal:'all',evidence:'photo',doors:'open_unlocked',stepLimit:1};
+  const run=startSimulation(room,{...specification,simulationOptions:options});
+  stepSimulation(run);stepSimulation(run);
+  assert.equal(run.autonomousSteps,1);assert.equal(run.phase,'partial');assert.equal(run.confirmed.length,1);
+  assert.match(run.events.at(-1).reason,/partial results: 1/);
+  for(const change of [{version:2},{searchGoal:'any'},{evidence:'thermal'},{doors:'force'},{stepLimit:0},{stepLimit:513},{stepLimit:1.5},{stepLimit:'20'}])
+    assert.throws(()=>startSimulation(room,{...specification,simulationOptions:{...options,...change}}));
+});
+
+test('all-goal reports constrained coverage as partial and avoid-door policy can block search',()=>{
+  const room=createRoom();place(room,'fire_picture',0,1);place(room,'door',1,0);place(room,'table',1,1);
+  const options={version:1,searchGoal:'all',evidence:'observation',doors:'avoid_closed',stepLimit:512};
+  const run=startSimulation(room,{...specification,simulationOptions:options});
+  for(let i=0;i<514&&run.phase==='running';i++)stepSimulation(run);
+  assert.equal(run.phase,'partial');assert.equal(run.confirmed.length,1);assert.match(run.events.at(-1).reason,/partial results/);
+  assert.equal(run.events.some(e=>e.action==='open_door'),false);
+  const enclosed=createRoom();place(enclosed,'door',1,0);place(enclosed,'table',0,1);
+  const blocked=startSimulation(enclosed,{...specification,simulationOptions:options});
+  for(let i=0;i<514&&blocked.phase==='running';i++)stepSimulation(blocked);
+  assert.equal(blocked.phase,'blocked');assert.match(blocked.events.at(-1).reason,/closed doors avoided/);
+});
+
+test('manual early report cannot claim all-goal completion',()=>{
+  const room=createRoom();place(room,'fire_picture',1,0);place(room,'fire_picture',5,5);
+  const run=startSimulation(room,{...specification,simulationOptions:{version:1,searchGoal:'all',evidence:'photo',doors:'open_unlocked',stepLimit:512}});
+  stepSimulation(run);const event=act(run,'report_findings');
+  assert.equal(run.phase,'partial');assert.equal(event.result.partial,true);
+  assert.equal(event.result.confirmed.length,1);
+});
+
+test('first-goal stops after exactly one finding even with two adjacent pictures',()=>{
+  const room=createRoom();place(room,'fire_picture',1,0);place(room,'fire_picture',0,1);
+  const run=startSimulation(room,specification);
+  for(let i=0;i<5&&run.phase==='running';i++)stepSimulation(run);
+  assert.equal(run.phase,'completed');assert.equal(run.photographed.length,1);
+});

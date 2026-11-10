@@ -11,7 +11,7 @@ test("real scoped cockpit, durable Live conversation and legacy feature-off spee
   expect((await request.put(`/admin/access-codes/${access.id}/agent-types`, { headers, data: { agentTypeKeys: ["core.rock_scissor_paper"] } })).ok()).toBe(true);
   const scoped = { "X-Prometheus-Access-Code": code };
   await hardware(context);
-  await page.goto("/valerian/"); await page.getByTestId("access-code-input").fill(code); await page.getByTestId("submit-access-code").click();
+  await page.goto("/valerian/developer-cockpit.html"); await page.getByTestId("access-code-input").fill(code); await page.getByTestId("submit-access-code").click();
   await page.locator("#open_diagnostics").click(); await page.getByTestId("agent-type-select").selectOption("core.rock_scissor_paper");
   const creation = page.waitForResponse(response => response.url().endsWith("/demo/agents") && response.request().method() === "POST");
   await page.getByTestId("create-agent-instance").click(); const agent = await (await creation).json(); const path = `/demo/agents/${agent.id}`;
@@ -96,7 +96,7 @@ test("real scoped cockpit, durable Live conversation and legacy feature-off spee
     expect(JSON.stringify(diagnostics)).not.toContain("I am ready to start a round");
     expect(JSON.stringify(diagnostics)).not.toContain("private-device");
     await page.getByTestId("gptlive-panel").screenshot({ path: info.outputPath("persisted-live-conversation.png") });
-    await page.goto(`/valerian/?agentId=${agent.id}`); await expect(page.getByTestId("gptlive-start")).toBeEnabled(); await page.getByTestId("gptlive-tab").click();
+    await page.goto(`/valerian/developer-cockpit.html?agentId=${agent.id}`); await expect(page.getByTestId("gptlive-start")).toBeEnabled(); await page.getByTestId("gptlive-tab").click();
     await expect(page.getByTestId("gptlive-history")).toContainText("I am ready to start a round");
     expect(await page.evaluate(() => window.__smokeCaptures)).toBe(0);
     await page.getByTestId("gptlive-start").click(); await expect(page.getByTestId("gptlive-status")).toHaveText("Active");
@@ -117,7 +117,7 @@ test("Live Multimodal exposes sensors and keeps embodiment beside native speech"
   expect((await request.put(`/admin/access-codes/${access.id}/agent-types`, { headers, data: { agentTypeKeys: ["core.live_multimodal"] } })).ok()).toBe(true);
   const scoped = { "X-Prometheus-Access-Code": code };
   await hardware(context);
-  await page.goto("/valerian/"); await page.getByTestId("access-code-input").fill(code); await page.getByTestId("submit-access-code").click();
+  await page.goto("/valerian/developer-cockpit.html"); await page.getByTestId("access-code-input").fill(code); await page.getByTestId("submit-access-code").click();
   await page.locator("#open_diagnostics").click(); await page.getByTestId("agent-type-select").selectOption("core.live_multimodal");
   const creation = page.waitForResponse(response => response.url().endsWith("/demo/agents") && response.request().method() === "POST");
   await page.getByTestId("create-agent-instance").click(); const agent = await (await creation).json(); const path = `/demo/agents/${agent.id}`;
@@ -177,7 +177,7 @@ test("Generic activation telemetry follows real pending work, cue waiting, failu
   const snapshot = () => page.evaluate(() => window.PrometheusActivity.snapshot());
   await hardware(context);
   try {
-    await page.goto(`/valerian/?agentId=${agent.id}`);
+    await page.goto(`/valerian/developer-cockpit.html?agentId=${agent.id}`);
     await page.getByTestId("access-code-input").fill(code); await page.getByTestId("submit-access-code").click();
     await expect(page.getByTestId("gptlive-start")).toBeEnabled();
     await page.getByTestId("gptlive-tab").click();
@@ -252,7 +252,7 @@ test("Social Space opt-in reception uses real scopes and fresh encounters", asyn
     if (response.url().endsWith("/live/sessions") && response.status() === 201) sessions.push(await response.json());
   });
   try {
-    await page.goto(`/valerian/?agentId=${agent.id}`);
+    await page.goto(`/valerian/developer-cockpit.html?agentId=${agent.id}`);
     await page.getByTestId("access-code-input").fill(code); await page.getByTestId("submit-access-code").click();
     await expect(page.getByTestId("gptlive-start")).toBeEnabled(); await page.getByTestId("gptlive-tab").click();
     await expect(page.getByTestId("gptlive-start")).toHaveText("Start reception");

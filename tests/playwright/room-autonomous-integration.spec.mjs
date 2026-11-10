@@ -1,5 +1,7 @@
 import {test,expect} from './fixtures/offline-ui-assets.mjs';
 import {readFile} from 'node:fs/promises';
+import {createRoom,place} from '../../src/main/resources/public/valerian/room-simulation.js';
+import {scenarioDocument} from '../../src/main/resources/public/valerian/room-artifacts.js';
 
 // Opt-in acceptance against a running, configured local demo. Owns only its newly created agent.
 test('form-defined task persists through scoped backend and runs autonomously without an inference provider',async({page,request})=>{
@@ -8,8 +10,16 @@ test('form-defined task persists through scoped backend and runs autonomously wi
   const headers={'X-Prometheus-Access-Code':code};
   const created=await request.post('/demo/agents',{headers,data:{agentDefinitionKey:'core.disaster_mission_configuration'}});
   expect(created.status()).toBe(201);const agent=await created.json();
+  let player;
   try{
-    await page.goto('/valerian/');
+    const scene=createRoom();place(scene,'door',1,0);place(scene,'fire_picture',5,0);
+    await page.goto('/valerian/rooms.html');
+    await page.locator('[data-room="import"]').setInputFiles({name:'integration-room.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(scenarioDocument(scene)))});
+    await expect(page.locator('[data-room="status"]')).toContainText('Room loaded');
+    await page.locator('#room-name').fill('Imported integration room');await page.locator('#save-room').click();
+    await expect(page.locator('#library-status')).toContainText('Saved Imported integration room');
+    const roomId=await page.locator('#saved-rooms').inputValue();
+    await page.goto('/valerian/developer-cockpit.html');
     await page.getByTestId('access-code-input').fill(code);await page.getByTestId('submit-access-code').click();
     await page.locator('#open_diagnostics').click();
     await page.getByTestId('agent-type-select').selectOption('core.disaster_mission_configuration');
@@ -27,27 +37,29 @@ test('form-defined task persists through scoped backend and runs autonomously wi
       if(await control.evaluate(el=>el.tagName==='SELECT'))await control.selectOption(answer);else await control.fill(answer);
       await page.getByTestId('mission-next').click();
     }
+    await page.getByTestId('mission-name').fill('Imported-room task');await page.getByTestId('mission-saved-room').selectOption(`${roomId}:1`);
     await page.getByTestId('mission-confirm').check();await page.getByTestId('mission-next').click();
     await expect(page.getByTestId('mission-config-status')).toContainText('Task saved');
     const stored=await request.get(`/demo/agents/${agent.id}/storage`,{headers});expect(stored.ok()).toBe(true);
     const mission=JSON.parse((await stored.json()).find(e=>e.key==='disaster_mission').value);
     expect(mission.location).toBe('Training room A');expect(mission.missingInformation).toEqual([]);
     expect(mission.ready).toBe(false); // Local simulation grants no supervisor approval.
-    const room=name=>page.locator(`[data-room="${name}"]`);
-    await room('tool').selectOption('door');await page.locator('[data-x="1"][data-y="0"]').click();
-    await room('tool').selectOption('fire_picture');await page.locator('[data-x="5"][data-y="0"]').click();
-    await room('save').click();await expect(room('status')).toContainText('Room saved');
-    await room('generate').click();await room('start').click();
-    await expect(room('pose')).toContainText('Phase: completed');
-    await expect(room('timeline')).toContainText('open_door: success');
-    await expect(room('timeline')).toContainText('report_findings: success');
-    const downloaded=page.waitForEvent('download');await room('report').click();
+    await expect(page.locator('[data-room]')).toHaveCount(0);
+    const popup=page.waitForEvent('popup');await page.getByTestId('mission-run-external').click();player=await popup;
+    await expect(player.locator('#player-phase')).toHaveText('Ready');await player.locator('#start').click();
+    await expect(player.locator('#player-phase')).toHaveText('Completed');
+    await expect(player.locator('#timeline')).toContainText('open_door(');
+    await expect(player.locator('#timeline')).toContainText('report_findings(');
+    const downloaded=player.waitForEvent('download');await player.locator('#export-run').click();
     const report=JSON.parse(await readFile(await (await downloaded).path(),'utf8'));
     expect(report.specification.room.location).toBe('Training room A');
     expect(report.missionRevision).toBe(mission.revision);expect(report.phase).toBe('completed');
     expect(report.initialRoom.objects).toHaveLength(2);expect(report.events.at(-1).action).toBe('report_findings');
-    await page.screenshot({path:'target/room-autonomous-integrated.png',fullPage:true});
+    expect(report.initialRoom.objects[0].open).toBe(false);expect(report.finalState.objects[0].open).toBe(true);
+    expect(report.events.every(event=>event.call.id===event.response.requestId)).toBe(true);
+    await player.screenshot({path:'target/room-autonomous-integrated.png',fullPage:true});
   }finally{
+    await player?.close();
     const removed=await request.delete(`/demo/agents/${agent.id}`,{headers});expect(removed.ok()).toBe(true);
   }
 });

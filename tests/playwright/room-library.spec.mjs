@@ -5,7 +5,7 @@ import {readFile} from 'node:fs/promises';
 test.beforeEach(async({page,context})=>{
   await context.route('**/valerian/**',async route=>{
     const name=new URL(route.request().url()).pathname.split('/').pop();
-    const allowed=['rooms.html','room-library.css','room-library-page.js','room-library.js','room-workspace.js','room-artifacts.js','room-simulation.js','task-specification.js'];
+    const allowed=['rooms.html','room-library.css','room-library-page.js','room-library.js','room-workspace.js','room-artifacts.js','room-simulation.js','room-world.js','simulation-actions.js','simulation-action-executor.js','task-specification.js'];
     if(!allowed.includes(name))return route.continue();
     await route.fulfill({contentType:name.endsWith('.html')?'text/html':name.endsWith('.css')?'text/css':'text/javascript',body:await readFile(`src/main/resources/public/valerian/${name}`,'utf8')});
   });

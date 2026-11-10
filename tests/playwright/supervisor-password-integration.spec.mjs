@@ -18,7 +18,7 @@ test('test mode retains approve/revoke/reject and legacy simulation start withou
     expect(saved.ok()).toBe(true);
     expect((await request.post(path+'/mission-review',{headers,data:decision(initial)})).status()).toBe(409);
     expect((await request.post(path+'/mission-review',{headers:{'X-Prometheus-Access-Code':'INVALID-TEST'},data:decision(await read())})).status()).toBe(401);
-    await page.goto('/valerian/');await page.getByTestId('access-code-input').fill(code);await page.getByTestId('submit-access-code').click();
+    await page.goto('/valerian/developer-cockpit.html');await page.getByTestId('access-code-input').fill(code);await page.getByTestId('submit-access-code').click();
     await page.locator('#open_diagnostics').click();await page.getByTestId('agent-type-select').selectOption('core.disaster_mission_configuration');
     await page.getByTestId('agent-select').selectOption(agent.id);await page.getByTestId('connect-agent').click();
     await expect(page.getByTestId('agent-connection-state')).toContainText(`Connected to ${agent.id}`);

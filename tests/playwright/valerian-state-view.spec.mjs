@@ -40,7 +40,7 @@ async function setup(page, context, theme = "light") {
     else return route.fulfill({ status: 404, body: "" });
     return route.fulfill({ contentType: "application/json", body: JSON.stringify(data) });
   });
-  await page.goto(`/valerian/?agentId=${ids[0]}`);
+  await page.goto(`/valerian/developer-cockpit.html?agentId=${ids[0]}`);
   await page.getByTestId("access-code-input").fill("STATE");
   await page.getByTestId("submit-access-code").click();
   await expect(page.getByTestId("agent-connection-state")).toContainText(`Connected to ${ids[0]}`);
@@ -184,7 +184,7 @@ test("state view tracks a persisted transition through real local HTTP and monit
   expect(creation.status()).toBe(201);
   const agent = await creation.json();
   try {
-    await page.goto(`/valerian/?agentId=${agent.id}`);
+    await page.goto(`/valerian/developer-cockpit.html?agentId=${agent.id}`);
     await page.getByTestId("access-code-input").fill(code);
     await page.getByTestId("submit-access-code").click();
     await page.waitForFunction(() => state.monitorReady);

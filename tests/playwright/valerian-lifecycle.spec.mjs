@@ -63,7 +63,7 @@ test("Valerian columns follow access, create, connect, disconnect, and logout li
   const scenario = { created: false, history: [STARTER_BEHAVIOUR] };
   await installLifecycleApiMocks(context, scenario);
 
-  await page.goto("/valerian/");
+  await page.goto("/valerian/developer-cockpit.html");
   await enterAccessCode(page);
   await expect(page.getByTestId("cockpit-shell")).toBeVisible();
   await assertColumnsEmpty(page);
@@ -115,7 +115,7 @@ test("camera hand report separates visible detection from acknowledged framework
     observations.push(route.request().postDataJSON());
     return route.fulfill(json({ active: true, responseEvent: null }));
   });
-  await page.goto("/valerian/");
+  await page.goto("/valerian/developer-cockpit.html");
   await enterAccessCode(page);
   await page.locator("#open_diagnostics").click();
   await page.locator("#agent_select").selectOption(AGENT_ID);
@@ -238,7 +238,7 @@ async function openWeatherControls(page, context, theme) {
       temperature_2m_min: [6.8, 6.5, 6.3], temperature_2m_max: [13.3, 13.4, 9.7], precipitation_sum: [1, 2, 3] },
   })));
   await page.addInitScript(value => localStorage.setItem("prometheus.valerian.theme", value), theme);
-  await page.goto(`/valerian/?agentId=${AGENT_ID}`);
+  await page.goto(`/valerian/developer-cockpit.html?agentId=${AGENT_ID}`);
   await enterAccessCode(page);
   await expect(page.getByTestId("agent-connection-state")).toContainText(`Connected to ${AGENT_ID}`);
   await page.locator('[data-bs-target="#manual_weather_events"]').click();

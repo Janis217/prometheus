@@ -17,6 +17,10 @@ code.
 
 ## Current implementation status
 
+QA-01 is in progress (2026-11-10): 191 Node and 702 Java tests pass; final
+browser sweep is running. Saved continuation state: `.agents/QA01_RESULTS.md`.
+Testing commands and verification limits: `.doc/testing.md`.
+
 ### Product and architecture
 
 - PROMETHEUS is a Java 21/Spring Boot framework for mapping multimodal `Event`
@@ -86,10 +90,41 @@ and regulation diagnostics remain future work.
   cases, 14 widget/lifecycle cases and 1 real-backend browser journey; evidence
   `.agents/VT08_RESULTS.md`. The offline demo at port 49679 has been restarted
   with its existing database/password setting; port 8080 requires a separate
-  restart to load the Java changes. Planned VT-09 saved-mission Run restores
-  and displays that room -> VT-10 revised mission inputs with observable
-  simulation effects (field/behaviour decisions deferred to the user).
-  Next implementation task is VT-09. VT-09/10 remain open.
+  restart to load the Java changes. VT-09 is complete (2026-11-10): saved mission Run restores its
+  immutable room snapshot and supports autonomous repeat/reset with revision
+  evidence in exports. Passed 23 Node tests, 14 browser widget/library cases and
+  one real-backend journey on port 8080; evidence `.agents/VT09_RESULTS.md`.
+  VT-10 is complete (2026-11-10): saved instructions for first/all search,
+  photo/observation evidence, door policy and integer step limits now affect
+  execution. Defaults preserve legacy behavior; reports retain effective
+  controls and partial results. Evidence: `.agents/VT10_RESULTS.md`.
+  VT-11 is complete (2026-11-10): cockpit Start now shows actionable readiness
+  feedback and a task-setup shortcut; missing/incomplete/blocked/unsupported tasks
+  cannot enable Start merely by generating a room. Verified 19 browser cases,
+  including real cockpit task setup, generation and autonomous completion.
+  Evidence: `.agents/VT11_RESULTS.md`.
+  VT-12 is complete (2026-11-10): the default entry now has Start a mission /
+  Create simulation room. Guided setup stays in the first tab; Run simulation
+  saves the task/room and opens a dedicated player waiting for Start, with room
+  and synchronized step output. Optional settings are collapsed. The full
+  cockpit is at `/valerian/developer-cockpit.html`. Passed 29 Node and 27 browser cases;
+  evidence `.agents/VT12_RESULTS.md`. Old cockpit links/cached HTML and old
+  agentId entry URLs now return to the two-choice home; explicit mission links
+  still reopen saved setup. User refinement: Start a mission now opens the
+  original Valerian cockpit for guided setup, retaining sensing/camera components
+  under their existing capability rules. The accepted separate simulation viewer
+  is unchanged. Verified 5 entry/player, 12 room widget and 5 lifecycle cases
+  across focused runs.
+  VT-13 is complete (2026-11-10): every simulator action now uses a versioned,
+  parameterized function call and correlated result. Separate world/executor
+  modules support live collision checks, deterministic obstacle/fault hooks and
+  capture-time evidence. Both timelines and exports retain calls and results.
+  Passed 37 Node and 25 browser cases; evidence `.agents/VT13_RESULTS.md`.
+  Follow-up: removed the remaining room-builder import/mount from every mission
+  workspace, including the full development cockpit and unbound tasks. Rooms
+  are created only in their separate page; saved missions open the separate
+  player from either cockpit. Passed 22 browser and 37 Node cases.
+  Next: user review; timed moving actors and floor-obstacle controls are future work.
   Tasks and acceptance: `.agents/PLAN_VALERIAN_TASK_SIMULATION.md`;
   status: `.agents/GITHUB_ISSUE_BACKLOG.md`.
 

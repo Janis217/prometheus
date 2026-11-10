@@ -13,8 +13,21 @@ public final class SavedMissionDetails {
     public static final String KEY = "saved_mission";
     private static final String CHUNK = KEY + ".room.";
     public record Room(String id, int revision, String name, String configuration) {}
-    public record Input(String name, Room room) {}
-    public record Saved(String name, Room room, int configuredRevision) {}
+    public record SimulationOptions(double version, String searchGoal, String evidence, String doors, double stepLimit) {}
+    public record Input(String name, Room room, SimulationOptions simulationOptions) {
+        public Input(String name, Room room) { this(name, room, null); }
+    }
+    public record Saved(String name, Room room, int configuredRevision, SimulationOptions simulationOptions) {}
+    public static SimulationOptions validateOptions(SimulationOptions options) {
+        if (options == null) return new SimulationOptions(1,"first","photo","open_unlocked",512);
+        if (options.version()!=1 || options.searchGoal()==null || !Set.of("first","all").contains(options.searchGoal())
+                || options.evidence()==null || !Set.of("photo","observation").contains(options.evidence())
+                || options.doors()==null || !Set.of("open_unlocked","avoid_closed").contains(options.doors())
+                || !Double.isFinite(options.stepLimit()) || options.stepLimit()!=Math.rint(options.stepLimit())
+                || options.stepLimit()<1 || options.stepLimit()>512)
+            throw new IllegalArgumentException("Invalid simulation controls.");
+        return options;
+    }
     private SavedMissionDetails() {}
 
     public static Input validate(Input input) {
@@ -23,7 +36,7 @@ public final class SavedMissionDetails {
         if (selected.id() == null || !UUID.fromString(selected.id()).toString().equals(selected.id()) || selected.revision() < 1)
             throw new IllegalArgumentException("Invalid saved room identity.");
         var layout = validateConfiguration(selected.configuration());
-        return new Input(name(input.name()), new Room(selected.id(), selected.revision(), name(selected.name()), layout));
+        return new Input(name(input.name()), new Room(selected.id(), selected.revision(), name(selected.name()), layout), validateOptions(input.simulationOptions()));
     }
     private static String name(String value) {
         if (value == null || value.isBlank() || value.strip().length() > 80) throw new IllegalArgumentException("Invalid name.");
@@ -43,6 +56,7 @@ public final class SavedMissionDetails {
         metadata.addProperty("roomName", validated.room().name());
         metadata.addProperty("configuredRevision", revision);
         metadata.addProperty("chunks", chunks);
+        metadata.add("simulationOptions", new Gson().toJsonTree(validated.simulationOptions()));
         storage.put(KEY, metadata);
         for (int i = 0; i < chunks; i++) storage.put(CHUNK + i,
                 new JsonPrimitive(configuration.substring(i * 800, Math.min(configuration.length(), (i + 1) * 800))));
@@ -55,8 +69,13 @@ public final class SavedMissionDetails {
         if (chunks < 1 || chunks > 82) throw new IllegalArgumentException("Invalid saved room chunks.");
         for (int i = 0; i < chunks; i++) text.append(storage.get(CHUNK + i).getAsString());
         var input = validate(new Input(string(meta, "name"), new Room(string(meta, "roomId"),
-                integer(meta, "roomRevision"), string(meta, "roomName"), text.toString())));
-        return new Saved(input.name(), input.room(), integer(meta, "configuredRevision"));
+                integer(meta, "roomRevision"), string(meta, "roomName"), text.toString()),
+                meta.has("simulationOptions") ? readOptions(meta.getAsJsonObject("simulationOptions")) : null));
+        return new Saved(input.name(), input.room(), integer(meta, "configuredRevision"), input.simulationOptions());
+    }
+    private static SimulationOptions readOptions(JsonObject value) {
+        return validateOptions(new SimulationOptions(integer(value,"version"),string(value,"searchGoal"),
+                string(value,"evidence"),string(value,"doors"),integer(value,"stepLimit")));
     }
     public static void clear(Storage storage) {
         for (String key : storage.toMap().keySet()) if (key.equals(KEY) || key.startsWith(CHUNK)) storage.remove(key);

@@ -85,7 +85,7 @@ test("received audio recording unsupported and recorder error leave Live usable"
 });
 
 test("received audio real MediaRecorder export preserves a late tone and silent tail", async ({ page }, info) => {
-  await page.goto("/valerian/"); await page.locator("body").click();
+  await page.goto("/valerian/developer-cockpit.html"); await page.locator("body").click();
   const result = await page.evaluate(async () => {
     const { ReceivedAudioRecording } = await import("/live/audio-recording.js");
     const recording = new ReceivedAudioRecording();
@@ -302,7 +302,7 @@ async function setup(context, scenario = {}) {
   return scenario;
 }
 async function open(page, connect = true) {
-  await page.goto(`/valerian/${connect ? `?agentId=${ID}` : ""}`);
+  await page.goto(`/valerian/developer-cockpit.html${connect ? `?agentId=${ID}` : ""}`);
   await page.getByTestId("access-code-input").fill("LIVE1"); await page.getByTestId("submit-access-code").click();
   await expect(page.getByTestId("cockpit-shell")).toBeVisible();
   if (connect) await expect(page.getByTestId("gptlive-start")).toBeEnabled();
@@ -385,7 +385,7 @@ test("no agent never starts; microphone denial and unsupported speaker routing a
   await setup(context); await open(page, false); await expect(page.getByTestId("gptlive-start")).toBeDisabled();
   expect(await page.evaluate(() => window.__live.captures)).toBe(0);
   await screenshot(page, info, "no-agent");
-  await page.goto(`/valerian/?agentId=${ID}`); await expect(page.getByTestId("gptlive-start")).toBeEnabled(); await page.getByTestId("gptlive-tab").click();
+  await page.goto(`/valerian/developer-cockpit.html?agentId=${ID}`); await expect(page.getByTestId("gptlive-start")).toBeEnabled(); await page.getByTestId("gptlive-tab").click();
   await page.evaluate(() => { window.__live.denied = true; delete HTMLMediaElement.prototype.setSinkId; });
   await page.getByTestId("gptlive-settings").locator("summary").first().click(); await page.locator("#gptlive_refresh").click();
   await expect(page.getByTestId("gptlive-output")).toBeDisabled(); await expect(page.locator("#gptlive_routing")).toContainText("system speaker");
@@ -427,7 +427,7 @@ test("exhausted API credits show billing guidance and release capture on desktop
 
 test("agent without Live capability keeps existing modes and cannot start capture", async ({ page, context }, info) => {
   const scenario = await setup(context, { eligible: false });
-  await page.goto(`/valerian/?agentId=${ID}`);
+  await page.goto(`/valerian/developer-cockpit.html?agentId=${ID}`);
   await page.getByTestId("access-code-input").fill("LIVE1"); await page.getByTestId("submit-access-code").click();
   await expect(page.getByTestId("send-text")).toBeEnabled();
   await expect(page.getByTestId("continuous-speech-tab")).toBeVisible();
@@ -443,7 +443,7 @@ test("agent without Live capability keeps existing modes and cannot start captur
 });
 
 test("feature disabled preserves the two existing tabs", async ({ page, context }) => {
-  await setup(context, { enabled: false }); await page.goto(`/valerian/?agentId=${ID}`);
+  await setup(context, { enabled: false }); await page.goto(`/valerian/developer-cockpit.html?agentId=${ID}`);
   await page.getByTestId("access-code-input").fill("LIVE1"); await page.getByTestId("submit-access-code").click();
   await expect(page.getByTestId("send-text")).toBeEnabled(); await expect(page.getByTestId("gptlive-tab")).toBeHidden();
   await expect(page.getByTestId("continuous-speech-tab")).toBeVisible(); expect(await page.evaluate(() => window.__live.captures)).toBe(0);

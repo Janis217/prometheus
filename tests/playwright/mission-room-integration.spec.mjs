@@ -11,7 +11,7 @@ test('named missions preserve selected room snapshots across reload, library edi
   }
   async function connect(id){
     const firstLogin=!(await page.evaluate(()=>sessionStorage.getItem('prometheus.valerian.accessCode')));
-    await page.goto(`/valerian/?agentId=${id}`);
+    await page.goto(`/valerian/developer-cockpit.html?agentId=${id}`);
     if(firstLogin){
       await page.getByTestId('access-code-input').fill(code);await page.getByTestId('submit-access-code').click();
     }
@@ -76,6 +76,15 @@ test('named missions preserve selected room snapshots across reload, library edi
     await expect(page.getByTestId('saved-mission-room-preview')).toContainText('smoke off');
     expect((await review(owned[0])).savedMission).toEqual(first.savedMission);
 
+    // Saved mission playback stays in its own tab, including the full cockpit.
+    const playbackPopup=page.waitForEvent('popup');await page.getByTestId('mission-run-external').click();const playback=await playbackPopup;
+    await expect(playback.locator('#start')).toBeEnabled();await playback.locator('#start').click();
+    await expect(playback.locator('#player-phase')).toHaveText('Completed',{timeout:20000});
+    await expect(playback.locator('#timeline')).toContainText('report_findings(');
+    expect((await review(owned[0])).savedMission).toEqual(first.savedMission);
+    await playback.locator('#start').click();await playback.locator('#pause').click();
+    await expect(playback.locator('#pose')).toContainText('(0, 0)');await playback.locator('#stop').click();await playback.close();
+
     // A newer room version is applied only by choosing and saving it explicitly.
     await page.getByTestId('mission-demo').click();
     await expect(page.getByTestId('mission-saved-room')).toHaveValue(`${roomId}:1`);
@@ -91,6 +100,11 @@ test('named missions preserve selected room snapshots across reload, library edi
     // Preview/restoration works even after local library data has been removed.
     await page.evaluate(()=>localStorage.removeItem('prometheus.room-library.v1'));
     await page.reload();await expect(page.getByTestId('saved-mission-room-preview')).toContainText('smoke on');
+    const restoredPopup=page.waitForEvent('popup');await page.getByTestId('mission-run-external').click();const restored=await restoredPopup;
+    await expect(restored.locator('#start')).toBeEnabled();await restored.locator('#start').click();await restored.locator('#pause').click();
+    await restored.locator('#stop').click();const exported=restored.waitForEvent('download');await restored.locator('#export-run').click();
+    const {readFile}=await import('node:fs/promises');const evidence=JSON.parse(await readFile(await (await exported).path(),'utf8'));
+    expect(evidence.specification.room.savedRoomRevision).toBe(2);await restored.close();
     await page.getByTestId('mission-demo').click();
     await expect(page.getByTestId('mission-saved-room')).toHaveValue(`${roomId}:2`);
     await page.setViewportSize({width:390,height:844});
@@ -114,4 +128,85 @@ test('named missions preserve selected room snapshots across reload, library edi
   }finally{
     for(const id of owned)expect((await request.delete(`/demo/agents/${id}`,{headers})).ok()).toBe(true);
   }
+});
+
+test('saved simulation controls survive reload and produce paired first/all/limited results',async({page,request})=>{
+  const code=process.env.PROMETHEUS_ROOM_ACCESS_CODE;
+  test.skip(!code,'Set PROMETHEUS_ROOM_ACCESS_CODE for a running configured local server.');
+  const headers={'X-Prometheus-Access-Code':code};
+  const created=await request.post('/demo/agents',{headers,data:{agentDefinitionKey:'core.disaster_mission_configuration'}});
+  expect(created.status()).toBe(201);const id=(await created.json()).id;
+  const control=name=>page.locator(`[data-option="${name}"]`),room=name=>page.locator(`[data-room="${name}"]`);
+  const review=async()=>await (await request.get(`/demo/agents/${id}/mission-review`,{headers})).json();
+  async function save(options){
+    await page.getByTestId('mission-demo').click();
+    if(options)for(const [key,value] of Object.entries(options)){
+      if(key==='stepLimit')await control(key).fill(String(value));else await control(key).selectOption(value);
+    }
+    await page.getByTestId('mission-confirm').check();await page.getByTestId('mission-next').click();
+    await expect(page.getByTestId('mission-config-status')).toContainText('Task saved');
+  }
+  async function runReport(){
+    const popup=page.waitForEvent('popup');await page.getByTestId('mission-run-external').click();const player=await popup;
+    await expect(player.locator('#start')).toBeEnabled();await player.clock.install();await player.locator('#start').click();
+    await player.clock.runFor(150000);await expect(player.locator('#player-phase')).not.toHaveText('Running');
+    const download=player.waitForEvent('download');await player.locator('#export-run').click();
+    const {readFile}=await import('node:fs/promises');const report=JSON.parse(await readFile(await (await download).path(),'utf8'));
+    await player.close();return report;
+  }
+  try{
+    await page.goto('/valerian/rooms.html');
+    await room('tool').selectOption('fire_picture');
+    for(const [x,y] of [[1,0],[5,5]])await page.locator(`[data-x="${x}"][data-y="${y}"]`).click();
+    await page.locator('#room-name').fill('VT10 paired room');await page.locator('#save-room').click();
+    await expect(page.locator('#library-status')).toContainText('Saved VT10 paired room');
+    const roomId=await page.locator('#saved-rooms').inputValue();
+    await page.goto(`/valerian/developer-cockpit.html?agentId=${id}`);await page.getByTestId('access-code-input').fill(code);await page.getByTestId('submit-access-code').click();
+    await expect(page.getByTestId('agent-connection-state')).toContainText(`Connected to ${id}`);
+    await page.getByTestId('mission-demo').click();await page.getByTestId('mission-saved-room').selectOption(`${roomId}:1`);
+    await page.getByTestId('mission-name').fill('VT10 paired mission');
+    await page.getByTestId('mission-confirm').check();await page.getByTestId('mission-next').click();
+    await expect(page.getByTestId('mission-config-status')).toContainText('Task saved');
+    await page.clock.install();
+    const first=await runReport();expect(first.phase).toBe('completed');expect(first.summary.photos).toHaveLength(1);
+    await save({searchGoal:'all',evidence:'observation',doors:'avoid_closed',stepLimit:256});
+    await page.reload();await expect(page.getByTestId('saved-mission-summary')).toContainText('VT10 paired mission');
+    await page.getByTestId('mission-demo').click();
+    await expect(control('searchGoal')).toHaveValue('all');await expect(control('evidence')).toHaveValue('observation');
+    await expect(control('doors')).toHaveValue('avoid_closed');await expect(control('stepLimit')).toHaveValue('256');
+    await page.getByRole('button',{name:'Cancel',exact:true}).click();
+    const all=await runReport();expect(all.phase).toBe('completed');expect(all.summary.findings).toHaveLength(2);expect(all.summary.photos).toHaveLength(0);
+    expect(all.events.some(event=>event.action==='record_observation')).toBe(true);
+    expect(all.initialRoom).toEqual(first.initialRoom);
+    await save({searchGoal:'all',evidence:'photo',stepLimit:1});
+    const limited=await runReport();expect(limited.phase).toBe('partial');expect(limited.summary.autonomousSteps).toBe(1);expect(limited.summary.photos).toHaveLength(1);
+    const current=await review(),task=JSON.parse(current.mission);
+    const data={expectedRevision:task.revision,fields:Object.fromEntries(['missionType','objective','priority','location','environment','risks','operatingConditions','searchBoundary','safetyAssessment'].map(key=>[key,task[key]])),robot:'ground robot',platformEvidence:task.platformSafety.declarations,savedMission:current.savedMission};
+    for(const invalid of [{stepLimit:1.5},{stepLimit:0},{searchGoal:'any'},{evidence:'thermal'},{doors:'force'},{version:2}]){
+      data.savedMission={...current.savedMission,simulationOptions:{...current.savedMission.simulationOptions,...invalid}};
+      expect((await request.put(`/demo/agents/${id}/mission-configuration`,{headers,data})).status()).toBe(400);
+    }
+    expect(await review()).toEqual(current);
+  }finally{expect((await request.delete(`/demo/agents/${id}`,{headers})).ok()).toBe(true);}
+});
+
+test('cockpit opens room creation only in a separate tab, including tasks without saved rooms',async({page,request})=>{
+  const code=process.env.PROMETHEUS_ROOM_ACCESS_CODE;
+  test.skip(!code,'Set PROMETHEUS_ROOM_ACCESS_CODE for a running configured local server.');
+  const headers={'X-Prometheus-Access-Code':code};
+  const created=await request.post('/demo/agents',{headers,data:{agentDefinitionKey:'core.disaster_mission_configuration'}});
+  expect(created.status()).toBe(201);const id=(await created.json()).id;
+  const builderRequests=[];page.on('request',request=>{if(new URL(request.url()).pathname.endsWith('/room-workspace.js'))builderRequests.push(request.url());});
+  try{
+    await page.goto(`/valerian/developer-cockpit.html?agentId=${id}`);await page.getByTestId('access-code-input').fill(code);await page.getByTestId('submit-access-code').click();
+    await expect(page.getByTestId('agent-connection-state')).toContainText(`Connected to ${id}`);
+    await expect(page.getByTestId('mission-build-room')).toBeVisible();await expect(page.locator('[data-room]')).toHaveCount(0);
+    const popup=page.waitForEvent('popup');await page.getByTestId('mission-build-room').click();const builder=await popup;
+    await expect(builder.locator('[data-room="shape"]')).toBeVisible();await expect(page.locator('[data-room]')).toHaveCount(0);await builder.close();
+    await page.getByTestId('mission-demo').click();await page.getByTestId('mission-confirm').check();await page.getByTestId('mission-next').click();
+    await expect(page.getByTestId('mission-config-status')).toContainText('Task saved');
+    await expect(page.locator('[data-room]')).toHaveCount(0);expect(builderRequests).toEqual([]);
+    await page.reload();await expect(page.getByTestId('agent-connection-state')).toContainText(`Connected to ${id}`);
+    await expect(page.locator('[data-room]')).toHaveCount(0);expect(builderRequests).toEqual([]);
+  }finally{expect((await request.delete(`/demo/agents/${id}`,{headers})).ok()).toBe(true);}
 });

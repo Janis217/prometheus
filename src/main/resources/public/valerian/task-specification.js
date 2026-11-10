@@ -1,6 +1,7 @@
 // A review/export projection of the backend mission. It grants no execution authority.
 import {parseScenario} from './room-artifacts.js';
-export function taskSpecification(mission,{savedRoom=null}={}) {
+import {simulationOptions} from './room-simulation.js';
+export function taskSpecification(mission,{savedRoom=null,options=null}={}) {
   if (!mission) return null;
   const supported = mission.missionType === 'fire_hotspot_inspection'
     && mission.objective === 'Find printed fire indicator' && mission.environment === 'indoor_flat';
@@ -8,6 +9,7 @@ export function taskSpecification(mission,{savedRoom=null}={}) {
     schemaVersion: 1,
     task: supported ? 'inspect_room_for_printed_fire_indicator' : 'unsupported_task',
     missionRevision: mission.revision,
+    simulationOptions:simulationOptions(options),
     objective: mission.objective,
     room: {location: mission.location, boundary: mission.searchBoundary,
       configuration:savedRoom?parseScenario(savedRoom.configuration):null,binding:savedRoom?'saved_definition':'not_bound',
@@ -19,7 +21,7 @@ export function taskSpecification(mission,{savedRoom=null}={}) {
     requiredSensing: supported
       ? ['visual_indicator_detection', 'obstacle_detection', 'door_state_observation', 'visibility_observation']
       : [...(mission.requiredPerception || [])],
-    requiredBehaviour: supported ? ['move', 'turn', 'open_door', 'take_photo', 'report_findings']
+    requiredBehaviour: supported ? ['move', 'turn', ...(simulationOptions(options).doors==='open_unlocked'?['open_door']:[]),simulationOptions(options).evidence==='photo'?'take_photo':'record_observation', 'report_findings']
       : [...(mission.requiredBehavior || [])],
     constraints: [...(mission.constraints || []), mission.operatingConditions].filter(Boolean),
     approvalState: mission.approvalState,
@@ -32,7 +34,8 @@ export function taskSpecificationText(specification) {
   if (specification.task === 'unsupported_task')
     return 'The room simulator supports one task: find a printed fire indicator on flat indoor terrain. Clarify the task using that objective before room simulation.';
   return [
-    'Task: inspect a room for a printed fire indicator and report photographic evidence.',
+    'Task: inspect a room for printed fire indicators and report the requested evidence.',
+    `Instructions: ${specification.simulationOptions.searchGoal==='first'?'first finding':'all reachable findings'}; ${specification.simulationOptions.evidence==='photo'?'simulated photos':'observations only'}; ${specification.simulationOptions.doors==='open_unlocked'?'try opening doors':'avoid closed doors'}; maximum ${specification.simulationOptions.stepLimit} autonomous steps.`,
     `Required sensing: ${specification.requiredSensing.map(humanize).join(', ')}.`,
     `Required behaviour: ${specification.requiredBehaviour.map(humanize).join(', ')}.`,
     `Room: ${specification.room.location || 'not specified'}; boundary: ${specification.room.boundary || 'not specified'}.`,
@@ -40,7 +43,7 @@ export function taskSpecificationText(specification) {
       : specification.missingInformation.length ? `Clarify: ${specification.missingInformation.map(humanize).join(', ')}.` : 'Task details captured; review the constraints and approval below.',
     specification.room.binding==='saved_definition'
       ?`Saved layout: ${specification.room.savedRoomName}, revision ${specification.room.savedRoomRevision}. Simulation has not started.`
-      :'Generate a room below, then start the local simulation to bind a room snapshot to this task revision.',
+      :'Select a saved room when reviewing the task, then open its simulation in a separate tab.',
   ].join('\n');
 }
 

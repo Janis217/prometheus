@@ -14,7 +14,7 @@ for (const challenging of [false, true]) {
     expect(accessResponse.status()).toBe(201);
     const access = await accessResponse.json();
     expect((await request.put(`/admin/access-codes/${access.id}/agent-types`, { headers: admin, data: { agentTypeKeys: [type] } })).ok()).toBe(true);
-    await page.goto("/valerian/");
+    await page.goto("/valerian/developer-cockpit.html");
     await page.getByTestId("access-code-input").fill(code); await page.getByTestId("submit-access-code").click();
     await page.locator("#open_diagnostics").click(); await page.getByTestId("agent-type-select").selectOption(type);
     const creation = page.waitForResponse(response => response.url().endsWith("/demo/agents") && response.request().method() === "POST");
@@ -58,7 +58,6 @@ for (const challenging of [false, true]) {
     expect(JSON.parse(entries.find(entry => entry.key === "disaster_mission").value).ready).toBe(false);
     await page.reload(); await expect(page.getByTestId("cockpit-shell")).toBeVisible();
     await page.locator("#open_diagnostics").click(); await page.getByTestId("agent-select").selectOption(agent.id);
-    await page.getByTestId("connect-agent").click();
     await expect(page.getByTestId("agent-connection-state")).toContainText(`Connected to ${agent.id}`); await closeDrawer();
     const last = page.getByTestId("message-list").locator(".demo-message.assistant .demo-bubble").last();
     await expect(last).toBeVisible(); expect(JSON.parse(await last.innerText())).toEqual(saved);

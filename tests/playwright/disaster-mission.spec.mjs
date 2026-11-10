@@ -11,7 +11,7 @@ for (const scenario of ["success", "missing", "unsafe"]) {
     const accessResponse = await request.post("/admin/access-codes", { headers: adminHeaders, data: { code, enabled: true } });
     expect(accessResponse.status()).toBe(201); const access = await accessResponse.json();
     expect((await request.put(`/admin/access-codes/${access.id}/agent-types`, { headers: adminHeaders, data: { agentTypeKeys: [TYPE] } })).ok()).toBe(true);
-    await page.goto("/valerian/");
+    await page.goto("/valerian/developer-cockpit.html");
     await page.getByTestId("access-code-input").fill(code); await page.getByTestId("submit-access-code").click();
     await page.locator("#open_diagnostics").click();
     await page.getByTestId("agent-type-select").selectOption(TYPE);
@@ -71,10 +71,9 @@ for (const scenario of ["success", "missing", "unsafe"]) {
     const beforeReload = await mission();
     await page.reload();
     await expect(page.getByTestId("cockpit-shell")).toBeVisible();
-    // Reload intentionally leaves columns disconnected. Reconnect explicitly before checking rendered history.
+    // The connected agent ID is retained in the URL, so reload restores it.
     await page.locator("#open_diagnostics").click();
     await page.getByTestId("agent-select").selectOption(agent.id);
-    await page.getByTestId("connect-agent").click();
     await expect(page.getByTestId("agent-connection-state")).toContainText(`Connected to ${agent.id}`);
     await expect(page.locator("#diagnostics_drawer")).not.toHaveClass(/showing/);
     await page.locator("#diagnostics_drawer").getByRole("button", { name: "Close", exact: true }).click();

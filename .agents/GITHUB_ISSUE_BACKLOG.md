@@ -39,10 +39,95 @@ The checklist at the top is the high-level milestone tracker. Codex must keep it
 - [x] VT-06: Reusable room scenarios and exportable run evidence
 - [x] VT-07: Independently saved rooms, available before mission creation (browser-local library)
 - [x] VT-08: Mission building and saving with a selected saved room
-- [ ] VT-09: Run a saved mission with its room restored and displayed
-- [ ] VT-10: Redesign mission inputs and connect them to simulation behaviour (details pending)
+- [x] VT-09: Run a saved mission with its room restored and displayed
+- [x] VT-10: Saved simulation instructions with observable execution effects
+- [x] VT-11: Cockpit Start readiness and recovery
+- [x] VT-12: Clean mission entry and separate simulation tab
+- [x] VT-13: Simulated function calls, parameters and structured results
+- [ ] QA-01: Whole-tool offline regression and recovery coverage (in progress)
 
 The checklist above is the summary view. The detailed milestone states and evidence follow below.
+
+## QA-01 whole-tool regression (2026-11-10)
+
+In progress at user request. Run all JavaScript units, the full Java suite on a
+random disposable schema, and browser coverage of the main application with
+controlled provider/media fixtures. Add failure/recovery tests and fix failures.
+Preserve the running application database and keep paid/physical trials separate.
+Initial checks found stale home/cockpit resource contracts and a retired inline
+room test, plus authentication tests inheriting local password-free demo settings.
+New coverage includes access revocation, server loss, safety changes, failed save
+popup cleanup, moving targets and executor-hook failures. Confirmed: 191 Node,
+702 Java, 3 runner guards, 28 corrected legacy browser cases and 2 local-demo
+cases pass. Final full browser sweep remains pending. Continuation and evidence:
+[QA01_RESULTS.md](QA01_RESULTS.md).
+
+## VT-13 simulated function calls (2026-11-10)
+
+Complete: every action uses a versioned function call with parameters and a
+correlated structured result. World geometry, action contracts and execution
+functions are separate. Live collision checks reject stale planned movement;
+deterministic scenario hooks support obstacle movement and actuator faults.
+Reports retain capture-time evidence positions and validate real search coverage.
+Both timelines show call/result output; exports retain the complete protocol.
+Passed 37 Node and 25 browser cases, including replan after a chair moves into
+the path, typed locked-door output, partial/failed runs, and real scoped multi-tab
+mission flows. Evidence: `VT13_RESULTS.md`; contract: `../.doc/simulation-action-contract.md`.
+Next: user review. Full moving-actor/floor-obstacle UI and hardware remain future work.
+
+## VT-12 clean mission workflow (2026-11-10)
+
+Complete: default entry has only Start a mission / Create simulation room.
+Room building opens a new tab. Guided setup stays in the first tab; final room
+selection and Run simulation save the mission and open a dedicated simulation
+player waiting for Start. Room, pause/resume/stop, repeat/export and synchronized
+step output are shown without the cockpit's diagnostic panels. Optional settings
+and answer review are collapsed. Full cockpit moved to `/valerian/developer-cockpit.html`.
+Scoped backend contracts and saved revisions are reused. Verified 29 Node cases
+and 27 browser cases, including the full multi-tab flow and cockpit regressions.
+Follow-up navigation repair: old cockpit bookmarks/cached HTML and old agentId
+entry URLs now return to the clean home. Full cockpit moved behind its explicit
+developer-cockpit.html path. Passed 5 entry/player and 5 lifecycle browser cases.
+User refinement: mission questions now run in the original Valerian cockpit
+(cockpit.html?setup=mission), preserving its sensing/camera and interaction
+components. Main setup has no inline room builder or player. Run simulation
+opens the accepted separate viewer. Camera availability retains capability rules.
+Verified 5 entry/player, 12 widget and 5 lifecycle cases across focused runs.
+Follow-up: removed the remaining builder import/mount from ALL mission workspaces,
+including full cockpit and tasks without rooms. Create simulation room links open
+the editor separately; saved missions launch the separate player in both modes.
+Verified 22 browser and 37 Node cases; request-level checks prove no builder JS
+loads in either cockpit mission widget. No backend/data changes.
+Evidence: `VT12_RESULTS.md`. Next: user review of the Valerian setup/player flow.
+
+## VT-11 cockpit Start readiness (2026-11-10)
+
+Complete: reproduced missing-task readiness defect: Generate room enabled Start
+without a usable task, so execution rejected at click time. Start now exposes
+readiness beside the button, gates missing/incomplete/blocked/unsupported tasks,
+and links directly to task setup. Generated layouts survive task setup; saved
+missions retain their own Run path. Verified 19 browser cases, including the
+real cockpit setup/generate/start path on port 8080 and saved-mission regressions.
+Evidence: `VT11_RESULTS.md`. Next: user review. No additional feature milestone
+was defined after VT-10; this user-reported repair is the next scoped increment.
+
+## VT-10 mission instructions (2026-11-10)
+
+Complete for user-approved search goal (first/all), evidence (photo/observation),
+door policy and 1–512 autonomous-step limit. Versioned controls persist atomically
+with saved mission/task; edits increment revision and invalidate approval. Legacy
+records resolve to original defaults; older clients preserve existing controls.
+Run review/export records effective controls, finding IDs and partial outcomes.
+Verification: 29 Node cases, 8 Java persistence/review tests, 14 widget/library
+browser cases and 2 real scoped backend browser journeys on port 8080.
+Evidence: `VT10_RESULTS.md`. Next: user review; hardware/usability not claimed.
+
+## VT-09 saved-mission Run (2026-11-10)
+
+Complete: restores saved room before Run; repeat/reset retain immutable initial state.
+Exports identify mission/task and room revisions. Invalid bindings reject Run.
+Passed 23 Node tests, 10 browser widget cases and one real-backend browser journey
+on port 8080. Evidence: `VT09_RESULTS.md`. VT-10 subsequently completed.
 
 ## Valerian task intake (2026-11-06)
 
@@ -55,7 +140,7 @@ database/browser journey (two missions, full snapshot/reload, explicit room
 update, library removal, stale/invalid rejection and chunked storage). Restarted
 only the existing offline demo on port 49679, preserving its database/password
 mode; port 8080 needs its own restart. Evidence: `VT08_RESULTS.md`.
-Next is VT-09 integrated Run; VT-10 input semantics remain deferred.
+VT-09 and VT-10 subsequently completed; see their result records.
 
 VT-07 complete (2026-11-06): independent Rooms page using the existing builder,
 with a browser-local named library and immutable saved revisions. Scope is
@@ -64,7 +149,7 @@ JSON import/export transfers layouts. Backend room synchronization is not
 part of this increment. Passed 22 room Node cases and 13 browser cases; live
 save/reload/reopen checks passed on ports 49679 and 8080, with no page errors.
 Mobile screenshot inspected. Evidence: `VT07_RESULTS.md`. The subsequent VT-08
-completion is recorded above; VT-09/10 remain planned.
+completion and the later VT-09/10 completions are recorded above.
 
 New workflow intake (2026-11-06): the user accepts the room builder and requests
 the next integration sequence: create/save a room independently, create/save a
@@ -266,7 +351,7 @@ Evidence:
 - Plan: `.agents/PLAN_GENERIC_REFINEMENT.md`.
 - Results: `.agents/GENERIC_REFINEMENT_RESULTS.md`, including the dated recheck.
 - JDK 21 focused Maven run: `-Dtest=GenericMultimodalTaskUnitTest,TaskLifecycleUnitTest test`:
-  27 passed, 0 failures/errors/skips.
+  29 passed, 0 failures/errors/skips.
 - `node tests/js/performance/activity.test.mjs`: 7 passed, 0 failures/skips.
 - Logs: `target/generic-refinement-recheck.log` and
   `target/generic-refinement-activity-recheck.log`.

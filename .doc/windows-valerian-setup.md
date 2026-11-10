@@ -1,5 +1,17 @@
 # Windows setup: Valerian and room simulation
 
+## Current entry screen (2026-11-10)
+
+Open `http://localhost:8080/`: choose **Start a mission** or **Create simulation
+room**. Build/save a room in its new tab, then return to the first tab and
+complete the mission questions with access code **ROOM1** for this installation.
+Select the saved room at the end and click **Run simulation**. The new simulation
+tab waits for **Start** and shows the room beside its step output.
+
+The full cockpit described in the older installation notes below now lives at
+`/valerian/developer-cockpit.html`; its agent drawer is not required for this main workflow.
+See [the current walkthrough](valerian-room-simulation.md#main-workflow).
+
 ## Build and save rooms before a mission
 
 VT-07 is now available: open `/valerian/rooms.html` on the server you are using

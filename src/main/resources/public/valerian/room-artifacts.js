@@ -1,4 +1,5 @@
 import {createRoom,inside,wallSlot} from './room-simulation.js';
+import {actionProtocolVersion} from './simulation-actions.js';
 
 export const scenarioLimit=65536;
 const types=new Set(['door','window','fire_picture','picture','chair','table']);
@@ -65,11 +66,11 @@ export function loadRoom(storage,agentId){
 
 export function runDocument(run,{paused=false}={}){
   if(!run||!run.specification?.room?.configuration)throw new Error('Start a simulation before exporting its run.');
-  return {format:'prometheus.room-run',version:1,simulator:'room-grid-v1',simulation:true,operationalReady:false,
+  return {format:'prometheus.room-run',version:1,simulator:'room-grid-v1',actionProtocolVersion,simulation:true,operationalReady:false,
     exportedAt:new Date().toISOString(),phase:run.phase,paused:run.phase==='running'&&paused,
     finished:run.phase!=='running',missionRevision:run.missionRevision,roomRevision:run.roomRevision,
     specification:structuredClone(run.specification),initialRoom:validatedRoom(run.specification.room.configuration),
     finalState:{robot:{...run.room.robot},smoke:run.room.smoke,objects:structuredClone(run.room.objects)},
-    summary:{eventCount:run.events.length,autonomousSteps:run.autonomousSteps,photos:[...run.photographed]},
+    summary:{eventCount:run.events.length,autonomousSteps:run.autonomousSteps,photos:[...run.photographed],findings:[...run.confirmed]},
     events:structuredClone(run.events)};
 }

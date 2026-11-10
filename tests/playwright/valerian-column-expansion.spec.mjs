@@ -161,7 +161,7 @@ test.beforeAll(async ({ request }) => {
 test("Valerian cockpit opens connected columns in detached windows", async ({ page, context }) => {
   await installDetachedWindowApiMocks(context);
 
-  await page.goto(`/valerian/?agentId=${DETACHED_AGENT_ID}`);
+  await page.goto(`/valerian/developer-cockpit.html?agentId=${DETACHED_AGENT_ID}`);
   await expect(page.getByTestId("access-screen")).toBeVisible();
   await page.getByTestId("access-code-input").fill(ACCESS_CODE);
   await page.getByTestId("submit-access-code").click();
@@ -195,7 +195,7 @@ test("Valerian cockpit opens connected columns in detached windows", async ({ pa
 test("Valerian camera and microphone controls follow detached window ownership", async ({ page, context }) => {
   await installDetachedWindowApiMocks(context);
 
-  await page.goto(`/valerian/?agentId=${DETACHED_AGENT_ID}`);
+  await page.goto(`/valerian/developer-cockpit.html?agentId=${DETACHED_AGENT_ID}`);
   await page.getByTestId("access-code-input").fill(ACCESS_CODE);
   await page.getByTestId("submit-access-code").click();
   await expect(page.getByTestId("cockpit-shell")).toBeVisible();
@@ -240,7 +240,7 @@ test("Valerian camera and microphone controls follow detached window ownership",
 });
 
 test("Valerian cockpit columns expand into a wider live modal viewport", async ({ page }, testInfo) => {
-  await page.goto("/valerian/");
+  await page.goto("/valerian/developer-cockpit.html");
   await expect(page.getByTestId("access-screen")).toBeVisible();
   await page.getByTestId("access-code-input").fill(ACCESS_CODE);
   await page.getByTestId("submit-access-code").click();
@@ -328,7 +328,7 @@ test("Valerian cockpit columns expand into a wider live modal viewport", async (
 });
 
 test("Valerian face emotion detector updates the report from the camera loop", async ({ page }) => {
-  await page.goto("/valerian/");
+  await page.goto("/valerian/developer-cockpit.html");
   await expect(page.getByTestId("access-screen")).toBeVisible();
   await page.getByTestId("access-code-input").fill(ACCESS_CODE);
   await page.getByTestId("submit-access-code").click();
@@ -363,7 +363,7 @@ test("Valerian face emotion detector updates the report from the camera loop", a
 test("Valerian social detector keeps reporting when face detector fails", async ({ page }) => {
   const pageErrors = [];
   page.on("pageerror", (error) => pageErrors.push(error.message));
-  await page.goto("/valerian/");
+  await page.goto("/valerian/developer-cockpit.html");
   await expect(page.getByTestId("access-screen")).toBeVisible();
   await page.getByTestId("access-code-input").fill(ACCESS_CODE);
   await page.getByTestId("submit-access-code").click();

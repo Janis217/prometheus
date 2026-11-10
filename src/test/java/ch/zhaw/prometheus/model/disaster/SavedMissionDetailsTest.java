@@ -7,6 +7,26 @@ import com.google.gson.*;
 import ch.zhaw.prometheus.model.Storage;
 
 class SavedMissionDetailsTest {
+    @Test void simulationControlsPersistValidateAndDefaultLegacyRecords() {
+        var input=details(room());var storage=new Storage();
+        var options=new SavedMissionDetails.SimulationOptions(1,"all","observation","avoid_closed",37);
+        SavedMissionDetails.write(storage,new SavedMissionDetails.Input(input.name(),input.room(),options),4);
+        assertEquals(options,SavedMissionDetails.read(storage.toMap()).simulationOptions());
+        var meta=storage.toMap().get(SavedMissionDetails.KEY).getAsJsonObject().deepCopy();
+        meta.remove("simulationOptions");storage.put(SavedMissionDetails.KEY,meta);
+        assertEquals(new SavedMissionDetails.SimulationOptions(1,"first","photo","open_unlocked",512),SavedMissionDetails.read(storage.toMap()).simulationOptions());
+        for(var invalid:new SavedMissionDetails.SimulationOptions[]{
+                new SavedMissionDetails.SimulationOptions(2,"all","photo","open_unlocked",10),
+                new SavedMissionDetails.SimulationOptions(1,"invalid","photo","open_unlocked",10),
+                new SavedMissionDetails.SimulationOptions(1,"all","thermal","open_unlocked",10),
+                new SavedMissionDetails.SimulationOptions(1,"all","photo","force",10),
+                new SavedMissionDetails.SimulationOptions(1,"all","photo","open_unlocked",0),
+                new SavedMissionDetails.SimulationOptions(1,"all","photo","open_unlocked",513),
+                new SavedMissionDetails.SimulationOptions(1,"all","photo","open_unlocked",1.5)}) {
+            assertThrows(IllegalArgumentException.class,()->SavedMissionDetails.write(storage,new SavedMissionDetails.Input(input.name(),input.room(),invalid),5));
+            assertEquals(4,SavedMissionDetails.read(storage.toMap()).configuredRevision());
+        }
+    }
     private JsonObject room() {
         return JsonParser.parseString("""
           {"format":"prometheus.room-scenario","version":1,"room":{"schemaVersion":1,"shape":"l_shaped",

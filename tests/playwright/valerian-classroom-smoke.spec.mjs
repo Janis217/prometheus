@@ -57,7 +57,7 @@ test("eight classroom groups retain responsive, isolated cockpits", async ({ bro
         if (response.url().startsWith(baseURL) && response.status() >= 500)
           failures.push(`${response.status()} ${new URL(response.url()).pathname}`);
       });
-      await page.goto("/valerian/");
+      await page.goto("/valerian/developer-cockpit.html");
       await page.getByTestId("access-code-input").fill(code);
       await page.getByTestId("submit-access-code").click();
       await page.locator("#open_diagnostics").click();
@@ -97,7 +97,7 @@ test("eight classroom groups retain responsive, isolated cockpits", async ({ bro
     await page.getByTestId("connect-agent").click();
     await connected(page, original.id);
     await expect(page.getByTestId("message-list")).toContainText(first.text);
-    await page.goto(`/valerian/?agentId=${original.id}`);
+    await page.goto(`/valerian/developer-cockpit.html?agentId=${original.id}`);
     await connected(page, original.id);
     await expect(page.getByTestId("message-list")).toContainText(first.text);
     await released();

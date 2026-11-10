@@ -839,7 +839,7 @@ for (const width of [1440, 390]) {
 }
 
 async function openConnectedValerian(page) {
-  await page.goto(`/valerian/?agentId=${AGENT_ID}`);
+  await page.goto(`/valerian/developer-cockpit.html?agentId=${AGENT_ID}`);
   await page.getByTestId("access-code-input").fill(ACCESS_CODE);
   await page.getByTestId("submit-access-code").click();
   await expect(page.getByTestId("cockpit-shell")).toBeVisible();

@@ -106,7 +106,9 @@ public class MissionReviewService {
                     || DisasterMission.text(evaluated, "question").startsWith("Please shorten")) throw failure(HttpStatus.BAD_REQUEST);
             policy.storage().put(DisasterMission.KEY, evaluated);
             var existing = SavedMissionDetails.read(agent.getStorage());
-            var details = selected != null ? selected : existing == null ? null : new SavedMissionDetails.Input(existing.name(), existing.room());
+            var details = selected != null ? selected : existing == null ? null : new SavedMissionDetails.Input(existing.name(), existing.room(), existing.simulationOptions());
+            if(selected!=null && existing!=null && input.savedMission().simulationOptions()==null)
+                details=new SavedMissionDetails.Input(selected.name(),selected.room(),existing.simulationOptions());
             if (details != null) SavedMissionDetails.write(policy.storage(), details, input.expectedRevision() + 1);
             agents.saveAndFlush(agent);
             return review(evaluated, agent.getStorage());

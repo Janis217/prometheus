@@ -9,7 +9,7 @@ async function setup(page, request) {
   expect((await request.put(`/admin/access-codes/${scope.id}/agent-types`, {headers:admin,data:{agentTypeKeys:[type]}})).ok()).toBe(true);
   const grant = await request.post('/admin/disaster/supervisors',{headers:admin,data:{scopeId:scope.id,name:'Guided test supervisor'}});
   expect(grant.status()).toBe(201); const token = (await grant.json()).token;
-  await page.goto('/valerian/'); await page.getByTestId('access-code-input').fill(code); await page.getByTestId('submit-access-code').click();
+  await page.goto('/valerian/developer-cockpit.html'); await page.getByTestId('access-code-input').fill(code); await page.getByTestId('submit-access-code').click();
   await page.locator('#open_diagnostics').click(); await page.getByTestId('agent-type-select').selectOption(type);
   const created = page.waitForResponse(r => r.url().endsWith('/demo/agents') && r.request().method() === 'POST');
   await page.getByTestId('create-agent-instance').click(); const agent = await (await created).json();
@@ -18,7 +18,8 @@ async function setup(page, request) {
   return {code,token,id:agent.id};
 }
 async function connect(page,id) {
-  await page.getByTestId('agent-select').selectOption(id); await page.getByTestId('connect-agent').click();
+  await page.getByTestId('agent-select').selectOption(id);
+  if(await page.getByTestId('connect-agent').getAttribute('aria-pressed')!=='true')await page.getByTestId('connect-agent').click();
   await expect(page.getByTestId('agent-connection-state')).toContainText(`Connected to ${id}`);
   await expect(page.locator('#diagnostics_drawer')).not.toHaveClass(/showing/);
   await page.locator('#diagnostics_drawer').getByRole('button',{name:'Close',exact:true}).click();
@@ -81,7 +82,7 @@ for (const variant of ['ordinary','obstacle','failure','timeout']) test(`Guided 
 test('Guided custom answers, stale form protection and two-window refresh', async ({page,request,context}) => {
   const credentials = await setup(page,request);
   const supervisor = await context.newPage();
-  await supervisor.goto('/valerian/');
+  await supervisor.goto('/valerian/developer-cockpit.html');
   // A separate tab has its own session; explicitly submit its access code if needed.
   if (await supervisor.getByTestId('access-code-input').isVisible()) {
     await supervisor.getByTestId('access-code-input').fill(credentials.code); await supervisor.getByTestId('submit-access-code').click();

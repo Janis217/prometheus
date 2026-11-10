@@ -7,7 +7,7 @@ const mission={missionType:'fire_hotspot_inspection',objective:'Find printed fir
 test.beforeEach(async({page})=>{
   await page.route('**/valerian/*.js',async route=>{
     const name=new URL(route.request().url()).pathname.split('/').pop();
-    const allowed=['room-workspace.js','room-simulation.js','room-artifacts.js','task-specification.js','mission-review.js','mission-wizard.js','mission-presentation.js','mission-rooms.js','room-library.js'];
+    const allowed=['room-workspace.js','room-simulation.js','room-world.js','simulation-actions.js','simulation-action-executor.js','room-artifacts.js','task-specification.js','mission-review.js','mission-wizard.js','mission-presentation.js','mission-rooms.js','room-library.js'];
     if(!allowed.includes(name))return route.abort();
     await route.fulfill({contentType:'text/javascript',body:await readFile(`src/main/resources/public/valerian/${name}`,'utf8')});
   });
@@ -40,7 +40,7 @@ test('builder, locked door, smoke and mission invalidation use the visible workf
   await expect(room(page,'pose')).toContainText('(0, 0)');
   await room(page,'target').selectOption({label:'Door (1, 0)'});
   await page.locator('[data-room-action="open_door"]').click();
-  await expect(room(page,'timeline')).toContainText('open_door: failed — Door is locked');
+  await expect(room(page,'timeline')).toContainText('blocked [DOOR_LOCKED]');
   await expect(room(page,'target').locator('option')).toHaveCount(2);
   await page.evaluate(()=>{window.mission.revision=2;window.workspace.refresh();});
   await expect(room(page,'status')).toContainText('Task revision changed');
@@ -53,8 +53,8 @@ test('start executes autonomously without further action clicks and reports matc
   await mount(page);await room(page,'tool').selectOption('fire_picture');await slot(page,5,0).click();
   await room(page,'generate').click();await room(page,'start').click();
   await expect(room(page,'pose')).toContainText('Phase: completed');
-  await expect(room(page,'timeline')).toContainText('take_photo: success');
-  await expect(room(page,'timeline')).toContainText('report_findings: success');
+  await expect(room(page,'timeline')).toContainText('take_photo(');
+  await expect(room(page,'timeline')).toContainText('report_findings(');
   await expect(slot(page,4,0)).toHaveText('→');
   await page.screenshot({path:'target/room-simulation-desktop.png',fullPage:true});
   await page.setViewportSize({width:390,height:844});
@@ -63,21 +63,23 @@ test('start executes autonomously without further action clicks and reports matc
   await page.screenshot({path:'target/room-simulation-mobile.png',fullPage:true});
 });
 
-test('mission workspace mounts capabilities and room builder and clears both on disconnect',async({page})=>{
-  await page.evaluate(async mission=>{
+for(const separateSimulation of [false,true])test(`mission workspace never mounts a room builder (separateSimulation=${separateSimulation})`,async({page})=>{
+  const builderRequests=[];page.on('request',request=>{if(new URL(request.url()).pathname.endsWith('/room-workspace.js'))builderRequests.push(request.url());});
+  await page.evaluate(async({mission,separateSimulation})=>{
     window.scope={agentId:'test-agent',accessCode:'test'};
     window.fetch=async url=>new Response(JSON.stringify(String(url).endsWith('/mission-review')
       ?{mission:JSON.stringify(mission),reviewVersion:0,safetyReference:'fixture'}:null),
       {status:String(url).endsWith('/mission-execution')?404:200,headers:{'Content-Type':'application/json'}});
     const {mountMissionReview}=await import('/valerian/mission-review.js');
-    window.review=mountMissionReview(document.querySelector('#root'),()=>window.scope);
+    window.review=mountMissionReview(document.querySelector('#root'),()=>window.scope,{separateSimulation});
     await window.review.refresh();
-  },mission);
+  },{mission,separateSimulation});
   await expect(page.getByTestId('task-specification-readable')).toContainText('Required sensing');
-  await expect(room(page,'grid')).toBeVisible();
+  await expect(page.getByTestId('mission-build-room')).toHaveAttribute('target','_blank');
+  await expect(page.locator('[data-room]')).toHaveCount(0);expect(builderRequests).toEqual([]);
   await page.evaluate(()=>{window.scope={};window.review.clear();});
   await expect(page.getByTestId('task-specification-json')).toBeEmpty();
-  await expect(room(page,'start')).toBeDisabled();
+  await expect(page.locator('[data-room]')).toHaveCount(0);
 });
 
 test('pause freezes execution, resume continues, and disconnect cancels the timer',async({page})=>{
@@ -125,8 +127,8 @@ test('dropdowns and text define a complete task which then executes without furt
   await room(page,'generate').click();await room(page,'start').click();
   await page.clock.runFor(5000);
   await expect(room(page,'pose')).toContainText('Phase: completed');
-  await expect(room(page,'timeline')).toContainText('open_door: success');
-  await expect(room(page,'timeline')).toContainText('report_findings: success');
+  await expect(room(page,'timeline')).toContainText('open_door(doorId="object-1"');
+  await expect(room(page,'timeline')).toContainText('report_findings(');
 });
 
 test('saved layout survives reload and stays isolated from another mission instance',async({page})=>{
@@ -214,4 +216,77 @@ for(const required of [false,true])test(`supervisor review and simulator start h
   const requests=await page.evaluate(()=>window.requests);
   expect(requests).toHaveLength(2);
   for(const request of requests)expect(request.headers['X-Prometheus-Supervisor-Token']).toBe(required?'synthetic-browser-token':undefined);
+});
+
+test('saved missions run exact snapshots repeatedly, export identity and reject changed or corrupt bindings',async({page})=>{
+  await page.clock.install();
+  await page.evaluate(async mission=>{
+    window.mission=mission;window.scope={agentId:'saved-a'};
+    const {createRoom,place}=await import('/valerian/room-simulation.js');
+    const {scenarioDocument}=await import('/valerian/room-artifacts.js');
+    const room=createRoom();place(room,'door',1,0,{locked:false});place(room,'fire_picture',5,0);
+    window.saved={name:'Mission A',configuredRevision:1,room:{id:'room-a',name:'Room A',revision:3,configuration:JSON.stringify(scenarioDocument(room))}};
+    window.original=JSON.stringify(window.saved);
+    const {mountRoomWorkspace}=await import('/valerian/room-workspace.js');
+    window.workspace=mountRoomWorkspace(document.querySelector('#root'),()=>window.mission,{getScope:()=>window.scope,getSavedMission:()=>window.saved});
+    window.workspace.refresh();
+  },mission);
+  await expect(room(page,'start')).toHaveText('Run saved mission');
+  await expect(slot(page,1,0)).toHaveText('D');
+  await expect(room(page,'shape')).toBeHidden();
+  await room(page,'start').click();await page.clock.fastForward(15000);
+  await expect(room(page,'pose')).toContainText('Phase: completed');
+  const download=page.waitForEvent('download');await room(page,'report').click();
+  const report=JSON.parse(await readFile(await (await download).path(),'utf8'));
+  expect(report.specification.savedMission).toEqual({id:'saved-a',name:'Mission A',configuredRevision:1});
+  expect(report.specification.room.savedRoomRevision).toBe(3);
+  expect(report.initialRoom.objects[0].open).toBe(false);
+  expect(report.finalState.objects[0].open).toBe(true);
+  expect(await page.evaluate(()=>JSON.stringify(window.saved)===window.original)).toBe(true);
+  await room(page,'start').click();await room(page,'pause').click();
+  await expect(room(page,'pose')).toContainText('(0, 0)');
+  await page.evaluate(()=>{window.mission.revision=2;window.workspace.refresh();});
+  await expect(room(page,'start')).toBeDisabled();
+  await expect(room(page,'status')).toContainText('save this mission again');
+  await page.evaluate(async()=>{
+    const {createRoom}=await import('/valerian/room-simulation.js');
+    const {scenarioDocument}=await import('/valerian/room-artifacts.js');
+    window.scope.agentId='saved-b';window.saved={name:'Mission B',configuredRevision:2,room:{id:'room-b',name:'Room B',revision:1,configuration:JSON.stringify(scenarioDocument(createRoom('rectangle')))}};
+    window.workspace.refresh();
+  });
+  await expect(room(page,'grid').locator('button')).toHaveCount(40);
+  await expect(room(page,'start')).toBeEnabled();
+  await page.evaluate(()=>{window.saved.room.configuration='{}';window.workspace.refresh();});
+  await expect(room(page,'start')).toBeDisabled();
+  await expect(room(page,'status')).toContainText('Unable to run saved mission');
+});
+
+test('Start explains missing task and generation requirements and recovers after task setup',async({page})=>{
+  await page.evaluate(async()=>{
+    window.mission=null;
+    const {mountRoomWorkspace}=await import('/valerian/room-workspace.js');
+    window.workspace=mountRoomWorkspace(document.querySelector('#root'),()=>window.mission);
+  });
+  await room(page,'generate').click();
+  await expect(room(page,'start')).toBeDisabled();
+  await expect(room(page,'readiness')).toContainText('Create task');
+  await page.evaluate(mission=>{window.mission=mission;window.workspace.refresh();},mission);
+  await expect(room(page,'start')).toBeEnabled();
+  await room(page,'tool').selectOption('fire_picture');await slot(page,5,0).click();
+  await expect(room(page,'start')).toBeDisabled();
+  await expect(room(page,'readiness')).toContainText('Generate room');
+  await room(page,'generate').click();await room(page,'start').click();
+  await expect(room(page,'pose')).toContainText('Phase: completed');
+});
+
+test('Start readiness follows incomplete, unsafe and unsupported task updates',async({page})=>{
+  await mount(page);await room(page,'generate').click();await expect(room(page,'start')).toBeEnabled();
+  await page.evaluate(()=>{window.mission.missingInformation=['location'];window.workspace.refresh();});
+  await expect(room(page,'start')).toBeDisabled();await expect(room(page,'readiness')).toContainText('Missing: location');
+  await page.evaluate(()=>{window.mission.missingInformation=[];window.mission.approvalState='blocked';window.workspace.refresh();});
+  await expect(room(page,'start')).toBeDisabled();await expect(room(page,'readiness')).toContainText('Task blocked');
+  await page.evaluate(()=>{window.mission.approvalState='awaiting_supervisor_approval';window.mission.environment='outdoor_open';window.workspace.refresh();});
+  await expect(room(page,'start')).toBeDisabled();await expect(room(page,'readiness')).toContainText('flat indoor terrain');
+  await page.evaluate(()=>{window.mission.environment='indoor_flat';window.workspace.refresh();});
+  await expect(room(page,'start')).toBeEnabled();
 });

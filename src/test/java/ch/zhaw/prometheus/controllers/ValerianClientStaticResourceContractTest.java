@@ -10,7 +10,7 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 
 class ValerianClientStaticResourceContractTest {
-    private static final Path INDEX = Path.of("src/main/resources/public/valerian/index.html");
+    private static final Path INDEX = Path.of("src/main/resources/public/valerian/cockpit.html");
     private static final Path SCRIPT = Path.of("src/main/resources/public/valerian/script.js");
 
     @Test
@@ -370,7 +370,8 @@ class ValerianClientStaticResourceContractTest {
         assertFalse(script.contains("localStorage.setItem(\"prometheus.valerian.selectedAgent"));
         assertTrue(script.contains("sessionStorage.getItem(ACCESS_CODE_STORAGE_KEY)"));
         assertTrue(script.contains("sessionStorage.setItem(ACCESS_CODE_STORAGE_KEY, state.accessCode)"));
-        assertFalse(script.contains("connectToAgent(id);"));
+        // Saved-mission selection explicitly connects by ID; login alone stays guarded.
+        assertTrue(script.contains("if (state.selectedAgentId) {"));
     }
 
     @Test

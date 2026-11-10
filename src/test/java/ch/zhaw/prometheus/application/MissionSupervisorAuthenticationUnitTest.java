@@ -87,15 +87,18 @@ class MissionSupervisorAuthenticationUnitTest {
                 "revision":0,"smoke":false,"robot":{"x":0,"y":0,"heading":1},"objects":[]}}
                 """;
         var selection=new SavedMissionDetails.Room(UUID.randomUUID().toString(),1,"Training room",layout);
-        var details=new SavedMissionDetails.Input("Mission A",selection);
+        var options=new SavedMissionDetails.SimulationOptions(1,"all","observation","avoid_closed",64);
+        var details=new SavedMissionDetails.Input("Mission A",selection,options);
         var saved=service.configure(agentId,"TEST",new MissionReviewService.Configuration(0,fields,evidence,"ground robot",details));
         assertEquals("Mission A",saved.savedMission().name());assertEquals(1,saved.savedMission().configuredRevision());
         assertEquals(saved,service.read(agentId,"TEST"));
+        assertEquals(options,saved.savedMission().simulationOptions());
         var approved=service.decide(agentId,"TEST",null,new MissionReviewService.Decision(UUID.randomUUID(),1,0,saved.safetyReference(),"approve"));
         assertTrue(JsonParser.parseString(approved.mission()).getAsJsonObject().get("ready").getAsBoolean());
         var changed=new SavedMissionDetails.Input("Mission A updated",new SavedMissionDetails.Room(selection.id(),2,"Training room",layout.replace("\"smoke\":false","\"smoke\":true")));
         var updated=service.configure(agentId,"TEST",new MissionReviewService.Configuration(1,fields,evidence,"ground robot",changed));
         assertEquals(2,updated.savedMission().configuredRevision());assertEquals(2,updated.savedMission().room().revision());
+        assertEquals(options,updated.savedMission().simulationOptions());
         assertFalse(JsonParser.parseString(updated.mission()).getAsJsonObject().get("ready").getAsBoolean());
         assertThrows(ResponseStatusException.class,()->service.configure(agentId,"TEST",new MissionReviewService.Configuration(1,fields,evidence,"ground robot",details)));
         assertEquals(updated,service.read(agentId,"TEST"));

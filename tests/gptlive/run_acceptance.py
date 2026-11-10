@@ -79,6 +79,7 @@ def main():
         PROMETHEUS_SPEECH_URL='http://127.0.0.1:9/no-provider', PROMETHEUS_LIVE_SESSIONS_URL='http://127.0.0.1:9/no-provider',
         PROMETHEUS_RUNTIME_TICK_ENABLED='false', SERVER_SHUTDOWN='immediate', PROMETHEUS_ADMIN_TOKEN=secrets.token_hex(20),
         SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE='10',
+        PROMETHEUS_SUPERVISOR_CREDENTIAL_REQUIRED=os.environ.get('PROMETHEUS_SUPERVISOR_CREDENTIAL_REQUIRED', 'true'),
         PROMETHEUS_SKIP_WEBSERVER='true')
     maven = ['mvnw.cmd'] if os.name == 'nt' else ['bash', './mvnw']
     npm = 'npx.cmd' if os.name == 'nt' else 'npx'
@@ -218,6 +219,22 @@ def main():
                         input('Press Enter here to stop the app and remove its disposable database: ')
                         stop()
                         continue
+                    # Give room/mission browser journeys their own scope in this disposable schema.
+                    admin_headers = {'Content-Type': 'application/json', 'X-Prometheus-Admin-Token': env['PROMETHEUS_ADMIN_TOKEN']}
+                    request = Request(env['PROMETHEUS_BASE_URL'] + '/admin/access-codes', headers=admin_headers)
+                    with urlopen(request, timeout=15) as response:
+                        room_scope = next((scope for scope in json.load(response) if scope['code'] == 'RM014'), None)
+                    if room_scope is None:
+                        request = Request(env['PROMETHEUS_BASE_URL'] + '/admin/access-codes',
+                            data=json.dumps({'code': 'RM014', 'enabled': True}).encode(), headers=admin_headers)
+                        with urlopen(request, timeout=15) as response:
+                            room_scope = json.load(response)
+                    request = Request(env['PROMETHEUS_BASE_URL'] + '/admin/access-codes/' + str(room_scope['id']) + '/agent-types',
+                        method='PUT', data=json.dumps({'agentTypeKeys': ['core.disaster_mission_configuration']}).encode(),
+                        headers={'Content-Type': 'application/json', 'X-Prometheus-Admin-Token': env['PROMETHEUS_ADMIN_TOKEN']})
+                    with urlopen(request, timeout=15) as response:
+                        response.read()
+                    env['PROMETHEUS_ROOM_ACCESS_CODE'] = 'RM014'
                     specs = ['tests/playwright/valerian-gptlive-smoke.spec.mjs', 'tests/playwright/valerian-state-view.spec.mjs']
                     if enabled == 'true':
                         specs += ['tests/playwright/valerian-gptlive.spec.mjs']

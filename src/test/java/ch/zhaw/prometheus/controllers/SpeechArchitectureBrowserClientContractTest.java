@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 class SpeechArchitectureBrowserClientContractTest {
 
     private static final Path VALERIAN_SCRIPT = Path.of("src/main/resources/public/valerian/script.js");
-    private static final Path VALERIAN_INDEX = Path.of("src/main/resources/public/valerian/index.html");
+    private static final Path VALERIAN_INDEX = Path.of("src/main/resources/public/valerian/cockpit.html");
     private static final Path MULTILATERAL_LISTEN_SCRIPT = Path.of(
             "src/main/resources/public/multilateral/listen/script.js");
     private static final Path TRANSCRIPTION_CLIENT = Path.of(

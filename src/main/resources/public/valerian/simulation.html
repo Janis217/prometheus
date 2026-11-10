@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Simulation · Valerian</title><link rel="stylesheet" href="mission-flow.css">
+</head>
+<body>
+  <header class="app-header"><a class="brand" href="./"><span class="brand-mark"></span>Valerian</a><span class="header-label">Simulation</span></header>
+  <main class="player-shell">
+    <section id="player-access" class="panel" hidden><h1>Open simulation</h1><form id="player-access-form"><label>Access code<input id="player-code" autocomplete="off" required></label><button class="primary" type="submit">Continue</button></form></section>
+    <div id="player" hidden>
+      <div class="player-heading"><div><h1 id="player-title"></h1><span id="player-room" class="room-preview-label"></span></div><span id="player-phase" class="badge">Ready</span></div>
+      <div class="player-grid">
+        <section class="panel"><div id="scene" class="scene" role="img" aria-label="Simulation room"></div><p id="pose" class="scene-caption"></p>
+          <div class="actions"><button class="primary" id="start" type="button">Start</button><button id="pause" type="button" disabled>Pause</button><button id="stop" type="button" disabled>Stop</button></div>
+        </section>
+        <section class="panel"><h2 class="output-title">Step-by-step output</h2><p id="empty-output" class="empty-output">Press Start to begin.</p><ol id="timeline" class="timeline" aria-label="Simulation steps"></ol><button id="export-run" type="button" hidden>Export run report</button></section>
+      </div>
+    </div>
+    <p id="player-status" class="player-status" role="status" aria-live="polite"></p><button id="reload-mission" type="button" hidden>Reload mission</button>
+  </main>
+  <script type="module" src="simulation-player.js"></script>
+</body>
+</html>

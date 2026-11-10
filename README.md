@@ -58,7 +58,7 @@ server address; export/import JSON to move layouts elsewhere. Each save retains
 earlier numbered revisions. In mission task review, enter a mission name and
 select a saved room to save its snapshot with the task in the scoped database.
 Reopen named missions through **Saved missions**; later library edits do not
-change their rooms. Running these saved missions is the next planned increment.
+change their rooms. Use **Run saved mission** to restore its saved starting room and run the local autonomous simulation. Set first/all search, photo/observation evidence, door policy and a step limit during task review.
 See the
 [room library guide](.doc/valerian-room-simulation.md#independent-room-library).
 
@@ -98,9 +98,22 @@ Use this client to create new access codes and assign the agent types made
 available in the scope of each access code. A valid access code must be entered
 before using Valerian Cockpit.
 
-### Valerian Cockpit
+### Valerian mission simulator
 
 URL: `http://localhost:8080/valerian/`
+
+Choose **Start a mission** or **Create simulation room**. Room creation opens a
+new tab; neither cockpit embeds the room builder. In the first tab, enter your access code if requested. Mission setup then
+opens in the original Valerian cockpit, retaining its sensing/camera and
+interaction components. Complete the mission questions and select a saved room. **Run simulation** saves the mission
+and opens a separate tab; press **Start** there to see the room and each step.
+Pause/resume, Stop and run export are available beside the simulation. Each
+step shows a parameterized function call and structured execution result; see
+[simulation action contracts](.doc/simulation-action-contract.md).
+
+### Valerian Cockpit
+
+URL: `http://localhost:8080/valerian/developer-cockpit.html`
 
 Valerian Cockpit is the primary all-in-one client for trying the core agents
 that ship with PROMETHEUS. After entering an access code, open the drawer on
@@ -417,12 +430,12 @@ Run the application:
 .\mvnw.cmd spring-boot:run
 ```
 
-The default local URL is `http://localhost:8080`; it redirects to Valerian
-Cockpit.
+The default local URL is `http://localhost:8080`; it opens the Valerian mission simulator.
 
 Open the main surfaces:
 
-- Valerian Cockpit: `http://localhost:8080/valerian/`
+- Valerian mission simulator: `http://localhost:8080/valerian/`
+- Valerian Cockpit: `http://localhost:8080/valerian/developer-cockpit.html`
 - Valerian Access Management: `http://localhost:8080/valerian-admin/`
 - Talk to Me: `http://localhost:8080/public/talktome`
 - API Workbench: `http://localhost:8080/apiworkbench/`
@@ -437,6 +450,9 @@ missing provider transcription or prove audible delivery. Evidence:
 [GI-02 results](.agents/GALAIMPROVEMENT_RESULTS.md).
 
 ## Testing
+
+See the [testing guide](.doc/testing.md) for JavaScript units, isolated full
+backend/browser acceptance, recovery coverage and verification limits.
 
 Executable task JSON optionally declares `firstAction: "ON_CUE"` to wait for a
 fresh matching observation after acceptance. Omission or `"IMMEDIATE"` keeps the

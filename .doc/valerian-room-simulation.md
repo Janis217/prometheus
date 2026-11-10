@@ -1,5 +1,51 @@
 # Task specification and room simulation
 
+## Main workflow
+
+Open `/` or `/valerian/`. The home screen has two choices:
+
+1. **Create simulation room** opens the room builder in a new tab. Name and save
+   a layout, then return to the first tab.
+2. **Start a mission** opens the original Valerian cockpit in the first tab,
+   with guided questions in its Interaction panel. Enter an access code if
+   requested; an existing session is reused. Sensing/camera components remain
+   governed by the selected agent's existing capabilities.
+3. At the end, name the mission, select its saved room and confirm the answers.
+   Simulation settings are optional and collapsed by default.
+4. **Run simulation** saves the task/room and opens `simulation.html` in a new tab.
+5. **Start** begins execution there. The room and step output share the same
+   simulation events. Pause/resume, Stop, repeat and export are available.
+
+Opening or reloading the simulation tab never starts movement automatically.
+Changing its saved mission in another tab invalidates the old simulation until
+Reload mission. Export a report before replacing a run. Access stays in session
+storage; URLs contain only the mission ID. A separately opened simulation link
+may ask for its access code. Missing or incompatible data never uses another room.
+
+Mission setup uses `/valerian/cockpit.html?setup=mission&agentId=...`, preserving
+the original Valerian interface without an embedded room builder/player. The
+full development cockpit remains at `/valerian/developer-cockpit.html`. The cockpit
+sections below describe that separate surface and its existing compatibility flow.
+
+## Function-call output (VT-13)
+
+Every step is a simulated function call with parameters, followed by its actual
+result. For example, move includes compass direction, one-metre distance and
+from/to coordinates; open_door includes door ID, position and force=false.
+Report_findings includes mission identity/revision, recipient, captured findings
+and evidence, coverage and partial-result status.
+
+The result line distinguishes succeeded, blocked, failed and not_implemented,
+with a stable code such as OK, DOOR_LOCKED or OBSTACLE_BLOCKED. Expand **Result**
+to inspect returned data and actual pose. Calls/results are also retained in the
+exported report. The displayed function text is not evaluated as program code.
+
+Actions execute against the current simulated world, so an obstacle appearing
+between planning and execution can block a move. A deterministic scenario hook
+supports this and simulated actuator faults; the planner can then replan from
+updated observations. Full timed moving-object/floor-obstacle controls are later
+work. See [function contracts and extension points](simulation-action-contract.md).
+
 ## Independent room library
 
 Open `/valerian/rooms.html` on your current running server, or use **Build and
@@ -26,7 +72,7 @@ friend or another address. Clearing browser data removes saved rooms. No backend
 room synchronization or per-access-code library privacy is provided.
 
 Mission creation with a selected saved room is available (VT-08), as described
-below. Run of a saved mission is next (VT-09). The mission-local simulator
+below. Saved-mission Run is available (VT-09). The mission-local simulator
 walkthrough remains available for tasks without saved rooms; its old
 **Save room in browser** stores a separate per-instance draft.
 
@@ -61,13 +107,75 @@ already saved mission still shows its room if the local library is cleared or
 the mission is opened from another browser with the same server/access scope.
 The demo database remains disposable when its harness is cleaned up.
 
-Named missions with saved rooms currently show a preview; their integrated Run
-flow is VT-09. The separate room editor and legacy scripted Start are disabled
-for these missions so an unrelated room/scenario cannot be mistaken for the
-saved one. Tasks saved without a room retain their existing demo controls.
+Click **Run saved mission** in the simulation workspace. The saved layout and
+robot pose appear before execution. Each run starts from the saved initial state,
+including doors and smoke. Pause/resume, Stop, synchronized grid/timeline and
+**Export run report** remain available. Run again after completion or Stop, or
+use **Reset to saved room** to clear the previous local timeline. Export before
+resetting to retain evidence. Reports include mission identity/task revision,
+saved room identity/revision, initial world and actual results.
+
+Runs are browser-local demonstrations using existing supported-task, completeness
+and blocked-safety checks. Runtime changes never update saved definitions.
+Reload/disconnect discards the run. Changed task revisions require resaving;
+malformed room snapshots disable Run with feedback. The room editor and legacy
+scripted Start remain disabled for saved-room missions. Tasks saved without a
+room retain their existing demo controls. Physical execution is not triggered.
+
+## Room creation and playback stay separate
+
+The mission workspace never mounts or imports the room builder, in either
+cockpit mode. Use **Create simulation room** to open the independent room editor
+in a new tab, then return and select that saved room when reviewing the mission.
+The selected-room preview is read-only. **Run simulation** opens the separate
+player; press **Start** there. A task without a saved room must select one before
+it can use this room simulation. The development cockpit retains its separate
+legacy R-204 diagnostic controls, which do not create rooms.
+
+## Simulation instructions (VT-10)
+
+On the task review screen, select a saved room, then set the four simulation
+instructions before confirming and saving. Reopen Create task or Load R-204 demo
+to change them; saving increments the task revision and invalidates approval.
+Mission name and saved room remain required for this saved-mission workflow.
+
+| Instruction | Values and default | Observable effect |
+|---|---|---|
+| Search goal | First (default), all reachable | First reports after one finding; all continues exploring reachable observed cells. |
+| Evidence | Photo (default), observation only | Collects simulated photos or records findings without any photo action. |
+| Doors | Open unlocked (default), avoid closed | Attempts doors without forcing locks, or routes around closed doors without opening them. |
+| Autonomous step limit | Integer 1?512; default 512 | At most this many autonomous actions, then stop with retained partial findings. |
+
+Smoke, geometry, objects, door states and robot starting pose come from the room.
+Priority, location, free-text search boundary, risks and operating conditions are
+mission context; their prose does not alter the route, speed or stopping policy.
+Supported task/terrain, completeness and blocked-safety checks still apply.
+These controls extend the existing review form rather than removing its safety
+and capability declarations.
+
+An all-goal run searches reachable observed space; it never uses unseen target
+coordinates. Closed/locked doors or inaccessible known findings yield a partial
+report when evidence exists, or a blocked result without evidence. Exhausting
+an empty reachable room reports not found. A step limit with no findings reports
+blocked; with findings it reports partial. Neither claims full completion.
+The initial perception refresh and final limit-stop event are outside the
+autonomous action budget; manual demo injections are also outside that budget.
+
+Review text, bound task JSON and run exports show the effective instructions.
+Reports retain finding IDs independently from photo IDs. Export before reset.
+Older records without instructions resolve to the original defaults; loading
+alone does not rewrite them. Task-only older clients preserve existing saved
+controls. Explicit unsupported versions/values and fractional/out-of-range
+limits are rejected before storage or simulation replacement.
+
+Repeatable paired example: square room, robot at (0,0) facing east, fire pictures
+at (1,0) and (5,5). First/photo produces one photo. All/observation produces two
+findings and zero photos. All/photo with step limit 1 captures the adjacent
+picture then stops partial. In a room with a closed unlocked door at (1,0) and
+a picture at (5,0), open-unlocked opens the door; avoid-closed takes another route.
 
 Technical persistence: `PUT /demo/agents/{id}/mission-configuration` optionally
-accepts `savedMission: {name, room: {id, revision, name, configuration}}`.
+accepts `savedMission: {name, room: {id, revision, name, configuration}, simulationOptions: {version: 1, searchGoal, evidence, doors, stepLimit}}`.
 `configuration` is a version-1 room-scenario JSON string. The scoped
 `mission-review` response includes `savedMission` and its `configuredRevision`.
 Room layouts are validated server-side and stripped to known fields. Metadata
@@ -84,49 +192,32 @@ provides supporting validation; its perception, movement and photos are syntheti
 
 ## Walkthrough
 
-1. Open Valerian and connect to `core.disaster_mission_configuration`.
-2. Use **Create task** or **Load R-204 demo**, review and save the answers. The
-   task objective for this simulator is **Find printed fire indicator** and
-   terrain is **Flat indoor terrain**. Complete the missing details and safety
-   declarations. For fire inspection, choose **Find printed fire indicator**
-   from the objective dropdown. Text fields capture the room name, boundary,
-   hazards and operating conditions; no natural-language model is called.
-3. Review **Task specification and capabilities** and its JSON. Missing facts
-   require clarification. A blocked or unsupported specification cannot start
-   the room simulator. The generic mission tools remain available for other tasks.
-4. In **Room simulation builder**, choose square, rectangle or L-shaped.
-   Choose each item and click a highlighted valid slot. Move the robot first
-   to use its starting slot for an object. Doors, windows and pictures require
-   boundary slots; chairs/tables occupy free interior slots. Use **Remove
-   object** to clear an occupied slot. Configure locked/open states before
-   placing each door. Multiple doors are supported.
-5. Set starting direction and optional smoke, then **Generate room** and
-   **Start autonomous simulation**. This binds an immutable local room snapshot to
-   the current task revision. Inspect **Bound simulation task JSON**.
-6. The robot now runs automatically, searching, approaching a perceived fire
-   picture, opening unlocked doors, recording a simulated `take_photo`, then
-   `report_findings`. No additional commands are required. **Pause** freezes the
-   run, **Resume** continues, and `stop` ends it. While paused, optional manual
-   controls and **Next autonomous step** let you inspect individual actions.
-7. Compare the grid with the text timeline: trigger, perception, action,
-   success/failure, reason and resulting position come from the same event.
+1. Open Valerian and choose **Create simulation room**. The room editor opens in
+   another tab. Choose square, rectangle or L-shaped, place objects, set door
+   states, robot pose and optional smoke, then name and save the room.
+2. Return to the first tab and choose **Start a mission**. Enter the access code
+   if requested; guided questions run in the original Valerian interface.
+3. Choose **Find printed fire indicator** on **Flat indoor terrain**, and complete
+   the location/boundary, hazards, stop conditions and safety declarations.
+4. At the end, name the mission and select the saved room. Review the answers
+   and optional simulation settings, confirm and press **Run simulation**.
+5. The separate simulation tab shows the saved starting world. Press **Start**.
+   The robot searches, approaches a perceived indicator and executes the selected
+   evidence/report functions automatically. Room and text output use the same events.
+6. Use **Pause**, **Resume** or **Stop** in that tab. Export its run report before
+   starting again; repeating resets to the saved initial room. Reload never auto-runs.
 
 ## Save, reuse and export
 
-- **Save room in browser** stores one layout for the connected mission instance.
-  After reload/reconnect, use **Load saved room** to restore it, then review and
-  generate it again. Saving another layout replaces that instance's saved draft.
-- **Export room JSON** downloads the initial room layout. **Import room JSON**
-  loads a compatible layout while in the builder. The current task stays unchanged
-  and execution never starts automatically. Import validates geometry, placement,
-  IDs and states before changing the room; files must be at most 64 KB.
-- **Export run report** downloads a snapshot containing the task specification,
-  initial room, final state, perceptions, actions and outcomes. A running/paused
-  snapshot is labelled as unfinished. Export before returning to the builder to
-  retain its timeline. Reports cannot be imported as layouts or resumed runs.
-- To repeat a demonstration, import its original room file, configure the same
-  task, Generate and Start. To use another browser, transfer the room JSON file;
-  browser-saved drafts and active runs are not server-synchronized.
+- On the separate Rooms page, named saves retain immutable revisions. Open or
+  save another revision there; mission workspaces only select/preview saved rooms.
+- Export/import room JSON transfers layouts between browser origins. Imports
+  validate geometry, IDs, placement, door state, pose, revision and the 64 KB limit.
+- Saved mission snapshots remain independent from later room-library edits.
+- The player exports mission/task and room revisions, initial/final state,
+  function calls, actual results and observations. Reports cannot be imported as
+  rooms or resumed runs. Active runs are local to their simulation tab.
+- The old per-mission inline room-draft buttons are no longer exposed in a cockpit.
 
 ## Challenging variants
 
@@ -176,8 +267,8 @@ quality claim is made or required. Human usability review remains separate.
 - Wall items are represented by boundary grid slots rather than wall edges.
   Doors govern traversal of their slot. Clear air uses omnidirectional grid
   line-of-sight; smoke restricts perception to one forward cell (one metre).
-- `fetch` and `pick_up` are explicit pretend acknowledgements for reachable
-  furniture, with no manipulation physics or world change.
+- `fetch` and `pick_up` are explicit NOT_IMPLEMENTED function placeholders for
+  reachable furniture, with no manipulation physics or world change.
 - Autonomous execution is deterministic for the single printed-fire-indicator
   task; text fields do not constitute an arbitrary robot programming language.
   Search uses perceived and remembered objects, scans headings under smoke and

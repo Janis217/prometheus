@@ -3,7 +3,9 @@
 Status: VT-01 through VT-06 complete for the structured-input, browser-local
 software demonstration (2026-11-06). VT-07 is complete for an independent
 browser-local room library. VT-08 is complete for scoped saved missions with
-room snapshots; VT-09 and VT-10 remain planned and not implemented.
+room snapshots; VT-09 is complete for saved-room runs; VT-10 is complete for the user-approved four simulation controls.
+VT-11/12 cover cockpit readiness and the clean home/original-Valerian setup/separate-player flow.
+VT-13 adds function-call execution and structured results; see its result record.
 Human usability review and hardware evidence are not claimed.
 Evidence: `VT_RESULTS.md`; walkthrough: `../.doc/valerian-room-simulation.md`.
 Source: `inputs/2026-11-06-newValeriaTasks.txt`, copied verbatim from the user's Downloads folder.
@@ -126,7 +128,7 @@ complete for their original scope; implement the missing workflow below.
 
 Implementation sequence: **VT-07 -> VT-08 -> VT-09**. VT-10 follows the user's
 later input/behaviour decisions. These milestones are recorded for subsequent
-work. VT-07 and VT-08 were subsequently authorized and completed; VT-09 is next.
+work. VT-07 through VT-10 were subsequently authorized and completed.
 
 ### VT-06: Reusable room scenarios and exportable evidence (follow-up)
 
@@ -220,23 +222,23 @@ Run is VT-09, with unrelated legacy/demo Start disabled for these missions.
 
 ### VT-09: Run a saved mission in its saved room
 
-Status: planned. Depends on VT-08.
+Status: complete (2026-11-10). Evidence: `VT09_RESULTS.md`.
 
 Goal: select a saved mission, run it, redisplay its associated room and observe
 the simulation in that room.
 
-- [ ] Add an explicit Run action for a selected saved mission with clear
+- [x] Add an explicit Run action for a selected saved mission with clear
       readiness feedback using the applicable existing simulation checks.
-- [ ] Load the mission's saved room and task revision together; display the room
+- [x] Load the mission's saved room and task revision together; display the room
       before movement starts rather than requiring the user to rebuild it.
-- [ ] Start a fresh run from the saved initial layout, object states and robot
+- [x] Start a fresh run from the saved initial layout, object states and robot
       pose, retaining existing visibility and autonomous simulation behaviour.
-- [ ] Keep runtime world changes separate from saved room/mission definitions.
-- [ ] Retain synchronized room/timeline output, pause/resume/stop and run export;
+- [x] Keep runtime world changes separate from saved room/mission definitions.
+- [x] Retain synchronized room/timeline output, pause/resume/stop and run export;
       identify the saved mission and room revisions in run evidence.
-- [ ] Handle missing/incompatible saved data with actionable feedback and no
+- [x] Handle missing/incompatible saved data with actionable feedback and no
       silent fallback to a different room or task.
-- [ ] Verify the full room-save -> mission-save -> reload -> select -> Run path,
+- [x] Verify the full room-save -> mission-save -> reload -> select -> Run path,
       plus repeated runs and two missions bound to different rooms.
 
 Acceptance: reopen a saved mission after reload, click Run, and see its exact
@@ -246,28 +248,55 @@ starts from that saved state. Mid-run persistence/resume is not assumed.
 
 ### VT-10: Mission inputs that determine simulation behaviour
 
-Status: planned; detailed field and behaviour requirements await the user's
-later decisions. Builds on VT-08/09; no speech/model requirement is introduced.
+Status: complete (2026-11-10). User approved first/all findings, photo/observation
+evidence, door policy and step limit. Evidence: `VT10_RESULTS.md`.
+Mapping and examples: `../.doc/valerian-room-simulation.md#simulation-instructions-vt-10`.
 
 Goal: revise what the mission form asks and make the agreed executable inputs
 actually affect simulation.
 
-- [ ] Agree which fields to retain, add, change or remove and the intended
+- [x] Agree which fields to retain, add, change or remove and the intended
       simulation effect of each; distinguish descriptive fields explicitly.
-- [ ] Record a field-to-behaviour mapping with validation, units/allowed values,
+- [x] Record a field-to-behaviour mapping with validation, units/allowed values,
       defaults and treatment of unsupported or conflicting instructions.
-- [ ] Update the mission schema, form and readable review to match that mapping.
-- [ ] Decide how existing saved missions are reopened or migrated when inputs
+- [x] Update the mission schema, form and readable review to match that mapping.
+- [x] Decide how existing saved missions are reopened or migrated when inputs
       change; never silently reinterpret their saved meaning.
-- [ ] Connect executable mission inputs to simulation setup, decisions, stopping
+- [x] Connect executable mission inputs to simulation setup, decisions, stopping
       conditions and outcome evaluation as agreed for each field.
-- [ ] Show the effective instructions used by each run in its review/report.
-- [ ] Verify paired runs with the same room but different executable inputs
+- [x] Show the effective instructions used by each run in its review/report.
+- [x] Verify paired runs with the same room but different executable inputs
       exhibit the agreed differences, including invalid/unsupported cases.
 
 Acceptance: for every agreed executable input, a documented example demonstrates
 its observable simulation effect. Final examples and field semantics must be
 defined with the user before declaring this milestone ready for implementation.
+
+### VT-12: Clean entry, guided setup and a separate simulation tab
+
+Status: complete (2026-11-10), explicitly requested by the user. Evidence: `VT12_RESULTS.md`.
+
+- [x] Home has two choices: Start a mission / Create simulation room.
+- [x] Room builder opens a new tab and saves rooms for selection in the first tab.
+- [x] Mission questions stay in the first tab; room selection is at the end.
+- [x] Run simulation saves the mission and opens a new tab without auto-starting.
+- [x] New tab shows room, Start/pause/resume/stop and synchronized step output.
+- [x] Preserve task/room version binding, scoped access and exports; reject invalid data.
+- [x] Verify full multi-tab workflow, popup retry, reload, changed mission and mobile layout.
+
+### VT-13: Simulated function calls and execution results
+
+Status: complete (2026-11-10), explicitly requested by the user. Evidence: `VT13_RESULTS.md`.
+
+- [x] Define a versioned action-call and correlated result contract for every action.
+- [x] Include directions, units, poses, target IDs, findings/evidence and report recipient.
+- [x] Execute calls through a simulation function registry with live-world checks.
+- [x] Separate immutable capture evidence from later changes to observed/world objects.
+- [x] Support deterministic scenario hooks for faults and obstacle movement at action boundaries.
+- [x] Display calls/results in both timelines and retain them in exported evidence.
+- [x] Verify live obstruction, replanning, failures, terminal outcomes and existing workflows.
+
+Full moving-object/floor-obstacle UI and hardware adapters are future work.
 
 ## Original implementation decisions
 
