@@ -1,8 +1,34 @@
 # QA-01 results and continuation handoff
 
-Status: IN PROGRESS, 2026-11-10. User requested whole-tool tests, then explicitly
-asked to save remaining work before context/token exhaustion. Do not mark complete
-until the final browser results below have been inspected.
+Status: COMPLETE for offline automated scope, 2026-11-13. Both final browser
+logs and their passed last-run JSON records have now been inspected. No further
+production or test changes were needed.
+
+## Final verification (2026-11-13)
+
+- `target/gptlive-acceptance-fec51f2169/browser-true.log`: 126 passed,
+  1 skipped (6.7 minutes); last-run status passed with no failed IDs.
+- `target/gptlive-acceptance-fec51f2169/browser-false.log`: 124 passed,
+  5 skipped (5.5 minutes); last-run status passed with no failed IDs.
+- Both skip the password-free supervisor case, verified separately below.
+  Live disabled also skips the classroom concurrency journey and three Live
+  smoke journeys, matching their explicit Live-enabled conditions.
+- Enabled discovered 127 cases; disabled discovered 129 because the two
+  secondary-surface cases were added during the run. Those also passed separately
+  in each mode under `gptlive-acceptance-abc7211609`; avoid double counting.
+- Fresh `npm.cmd test`: 191 passed, zero failures/skips.
+- Fresh runner guards: 3 passed after setting the documented
+  `$env:PYTHONPATH=(Resolve-Path target/test-python).Path`. Without that path,
+  the initial invocation failed on the missing PyMySQL import.
+- No Java or Python app/runner processes were present at inspection. An optional
+  read-only cleanup check could not connect: the retained target/test-python
+  PyMySQL package lacks its connect API. No database changes were made. Broad-run
+  schema/account removal was not independently reverified this turn; earlier
+  cleanup confirmations below are historical evidence.
+- Retained the completed isolated Java result (702 passes); successful Java and
+  browser runs were not repeated. Project status, plan and backlog are closed.
+
+The continuation instructions below are historical and resolved by this section.
 
 ## Confirmed results
 
@@ -35,7 +61,7 @@ Updated legacy browser tests to respect restored connections after reload.
 Added read-only access-management session and missing-agent listener tests.
 No production behavior fix was needed during this QA pass so far.
 
-## Active runs: inspect these first next turn
+## Historical active-run handoff
 
 1. Complete corrected browser sweep: unified exec session **42929**;
    artifacts `target/gptlive-acceptance-fec51f2169/`.
@@ -56,7 +82,7 @@ Java/MySQL processes. The user's running app is separate on port 8080.
 If sessions cannot be resumed after a new session, inspect artifacts and processes
 before rerunning. Do not print local properties, tokens, or datasource secrets.
 
-## Remaining work
+## Historical remaining-work checklist (resolved above)
 
 - Inspect both active runs, diagnose/fix any new failures and rerun only affected
   coverage; repeat broad sweep only if changes justify it.

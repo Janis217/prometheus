@@ -2,6 +2,7 @@ import {createRoom,inside,wallSlot,place,visibleCells,startSimulation,act,stepSi
 import {taskSpecification} from './task-specification.js';
 import {scenarioDocument,parseScenario,saveRoom,loadRoom,runDocument,scenarioLimit,validatedRoom} from './room-artifacts.js';
 import {formatActionEvent} from './simulation-actions.js';
+import {obstacleMoves} from './room-world.js';
 
 const names={robot:'Robot start',door:'Door',window:'Window',fire_picture:'Fire picture',picture:'Non-fire picture',chair:'Chair',table:'Table',erase:'Remove object'};
 const symbols={door:'D',window:'W',fire_picture:'F',picture:'P',chair:'C',table:'T'};
@@ -19,6 +20,16 @@ export function mountRoomWorkspace(root,getMission,{getScope=()=>({}),getSavedMi
       <label>Starting direction<select class="form-select" data-room="heading"><option value="0">North</option><option value="1" selected>East</option><option value="2">South</option><option value="3">West</option></select></label>
     </div>
     <p class="small mt-2" data-room="builder-help">Choose an item, then a highlighted valid slot. Shape changes clear the room. Furniture blocks sight and movement. Closed doors block movement and sight beyond them.</p>
+    <details data-room="obstacles" class="my-2"><summary>Scheduled obstacle moves</summary>
+      <p class="small">Move furniture immediately before a numbered robot action. Each run repeats this schedule. Occupied destinations leave the furniture in place. At most 32 moves.</p>
+      <div data-room="obstacle-editor" class="d-flex flex-wrap gap-2 align-items-end">
+        <label>Obstacle<select class="form-select" data-room="obstacle-object"></select></label>
+        <label>Before action<input class="form-control" type="number" min="1" max="512" value="1" data-room="obstacle-action"></label>
+        <label>Destination x<input class="form-control" type="number" min="0" value="1" data-room="obstacle-x"></label>
+        <label>Destination y<input class="form-control" type="number" min="0" value="0" data-room="obstacle-y"></label>
+        <button type="button" class="btn btn-outline-ink btn-sm" data-room="obstacle-add">Add move</button>
+      </div><ol data-room="obstacle-list" class="small mt-2"></ol>
+    </details>
     <div class="d-flex flex-wrap gap-2 my-2">
       <button type="button" class="btn btn-outline-ink btn-sm" data-room="save">Save room in browser</button>
       <button type="button" class="btn btn-outline-ink btn-sm" data-room="load">Load saved room</button>
@@ -117,6 +128,22 @@ export function mountRoomWorkspace(root,getMission,{getScope=()=>({}),getSavedMi
     el('start').textContent=saved?'Run saved mission':'Start autonomous simulation';
     el('edit').textContent=saved?'Reset to saved room':'Return to builder';
     const world=run?.room||room, visible=run?visibleCells(world):null, tool=el('tool').value;
+    el('obstacle-editor').hidden=!!saved||!!run;
+    // Bootstrap display utilities override the native hidden attribute.
+    el('obstacle-editor').classList.toggle('d-flex',!saved&&!run);
+    const selectedObstacle=el('obstacle-object').value;
+    el('obstacle-object').replaceChildren(new Option('Choose furniture',''));
+    for(const object of room.objects.filter(item=>['chair','table'].includes(item.type)))
+      el('obstacle-object').add(new Option(`${names[object.type]} ${object.id} (${object.x}, ${object.y})`,object.id));
+    el('obstacle-object').value=selectedObstacle;
+    el('obstacle-list').replaceChildren(...(world.obstacleMoves||[]).map((move,index)=>{
+      const item=document.createElement('li');
+      item.textContent=`Before action ${move.action}: ${move.objectId} to (${move.x}, ${move.y}). `;
+      if(!saved&&!run){const remove=document.createElement('button');remove.type='button';remove.className='btn btn-outline-ink btn-sm';
+        remove.textContent='Remove move';remove.disabled=importing;
+        remove.onclick=()=>attempt(()=>{room.obstacleMoves.splice(index,1);room.revision++;generated=false;message('Obstacle move removed. Save the room to keep changes.');});item.append(remove);}
+      return item;
+    }));
     el('grid').style.gridTemplateColumns=`repeat(${world.width},minmax(0,1fr))`;
     el('grid').replaceChildren();
     for(let y=0;y<world.height;y++)for(let x=0;x<world.width;x++){
@@ -133,7 +160,8 @@ export function mountRoomWorkspace(root,getMission,{getScope=()=>({}),getSavedMi
       cell.setAttribute('aria-label',`Slot ${x}, ${y}: ${robot?'robot, ':''}${detail}${run?`, ${seen?'visible to robot':'overview only'}`:''}`);
       cell.title=cell.getAttribute('aria-label');cell.disabled=!valid;
       cell.onclick=()=>attempt(()=>{
-        if(tool==='erase'){room.objects=room.objects.filter(o=>o.x!==x||o.y!==y);room.revision++;}
+        if(tool==='erase'){const removed=room.objects.find(o=>o.x===x&&o.y===y);room.objects=room.objects.filter(o=>o!==removed);
+          if(room.obstacleMoves)room.obstacleMoves=room.obstacleMoves.filter(move=>move.objectId!==removed.id);room.revision++;}
         else place(room,tool,x,y,{locked:el('locked').checked,open:el('open').checked});
         generated=false;message(builderOnly?'Room changed. Save to keep this layout.':'Room changed. Generate it before starting.');
       });el('grid').append(cell);
@@ -145,6 +173,7 @@ export function mountRoomWorkspace(root,getMission,{getScope=()=>({}),getSavedMi
     el('target').value=selected;
     root.querySelectorAll('[data-room-action]').forEach(button=>{button.disabled=!active()||(timer!==null&&button.dataset.roomAction!=='stop');});
     for(const name of ['shape','tool','locked','open','smoke','heading','generate','import'])el(name).disabled=!!run||importing;
+    for(const name of ['obstacle-object','obstacle-action','obstacle-x','obstacle-y','obstacle-add'])el(name).disabled=!!run||importing;
     const hasScope=!!getScope().agentId;
     el('save').disabled=!!run||importing||!hasScope;el('load').disabled=!!run||importing||!hasScope;
     el('export').disabled=importing;el('report').disabled=!run;
@@ -159,6 +188,12 @@ export function mountRoomWorkspace(root,getMission,{getScope=()=>({}),getSavedMi
     }));
   }
   function attempt(operation){try{operation();}catch(error){stopTimer();message(error.message);}render();}
+  el('obstacle-add').onclick=()=>attempt(()=>{
+    const candidate={objectId:el('obstacle-object').value,action:el('obstacle-action').valueAsNumber,
+      x:el('obstacle-x').valueAsNumber,y:el('obstacle-y').valueAsNumber};
+    room.obstacleMoves=obstacleMoves(room,[...(room.obstacleMoves||[]),candidate]);
+    room.revision++;generated=false;message('Obstacle move added. Save the room to keep this scenario.');
+  });
   function download(payload,filename){
     const url=URL.createObjectURL(new Blob([JSON.stringify(payload,null,2)+'\n'],{type:'application/json'}));
     const link=document.createElement('a');link.href=url;link.download=filename;root.append(link);link.click();link.remove();

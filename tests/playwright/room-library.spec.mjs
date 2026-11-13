@@ -14,6 +14,25 @@ test.beforeEach(async({page,context})=>{
 const item=(p,name)=>p.locator(`[data-room="${name}"]`);
 const slot=(p,x,y)=>p.locator(`[data-x="${x}"][data-y="${y}"]`);
 
+test('named room revisions retain obstacle schedules and removing furniture clears its moves',async({page})=>{
+  await item(page,'tool').selectOption('chair');await slot(page,3,3).click();
+  await item(page,'obstacles').locator('summary').click();
+  await item(page,'obstacle-object').selectOption('object-1');await item(page,'obstacle-action').fill('2');
+  await item(page,'obstacle-add').click();
+  await page.locator('#room-name').fill('Moving chair');await page.locator('#save-room').click();
+  await expect(page.locator('#library-status')).toHaveText('Saved Moving chair, revision 1.');
+  const id=await page.locator('#saved-rooms').inputValue();await page.reload();
+  await page.locator('#saved-rooms').selectOption(id);await page.locator('#open-room').click();
+  await expect(item(page,'obstacle-list')).toContainText('Before action 2: object-1 to (1, 0)');
+  await item(page,'tool').selectOption('erase');await slot(page,3,3).click();
+  await expect(item(page,'obstacle-list').locator('li')).toHaveCount(0);
+  await page.locator('#save-room').click();await expect(page.locator('#library-status')).toHaveText('Saved Moving chair, revision 2.');
+  const previous=await page.evaluate(async id=>(await import('/valerian/room-library.js')).loadLibraryRoom(localStorage,id,1),id);
+  expect(previous.room.obstacleMoves).toEqual([{action:2,objectId:'object-1',x:1,y:0}]);
+  await page.setViewportSize({width:390,height:844});await item(page,'obstacles').locator('summary').click();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
+
 test('build two named rooms without a mission and restore all state after reload',async({page})=>{
   let backendRequests=0;page.on('request',r=>{if(new URL(r.url()).pathname.startsWith('/demo/'))backendRequests++;});
   await expect(item(page,'start')).toBeHidden();await expect(item(page,'save')).toBeHidden();

@@ -17,9 +17,21 @@ code.
 
 ## Current implementation status
 
-QA-01 is in progress (2026-11-10): 191 Node and 702 Java tests pass; final
-browser sweep is running. Saved continuation state: `.agents/QA01_RESULTS.md`.
+VT-14 is complete (2026-11-13): room scenarios can schedule chair/table moves
+before numbered robot actions. Runtime collision checks, replanning, both timelines
+and run reports expose the changes; fresh runs restore the saved layout/schedule.
+195 Node and 21 browser cases passed. Evidence: `.agents/VT14_RESULTS.md`.
+User selected simulation only; DM-06 physical work remains deferred.
+
+QA-01 offline automated acceptance is complete (2026-11-13): 191 Node and
+702 Java tests pass. Final browser sweep: Live enabled 126 passed/1 skipped;
+Live disabled 124 passed/5 skipped. Evidence: `.agents/QA01_RESULTS.md`.
 Testing commands and verification limits: `.doc/testing.md`.
+
+Cutoff CI-03 automated acceptance passed (2026-11-13): 76 Live units, 2 Java
+smokes, browser Live enabled 32 passed and disabled 7 passed/3 expected skips;
+native Chrome WebM/Opus export and packaging passed. Physical trial remains open.
+Evidence: `.agents/CUTOFF_INSPECTION_RESULTS.md`; handoff: `.doc/cutoff-operator-trial.md`.
 
 ### Product and architecture
 

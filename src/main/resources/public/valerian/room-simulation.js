@@ -1,4 +1,4 @@
-import {headings,visibleCells} from './room-world.js';
+import {headings,visibleCells,obstacleMoves} from './room-world.js';
 export {shapes,headings,inside,createRoom,wallSlot,place,visibleCells} from './room-world.js';
 import {createActionRequest} from './simulation-actions.js';
 import {executeSimulationAction} from './simulation-action-executor.js';
@@ -16,6 +16,9 @@ export function startSimulation(room, specification, {beforeAction=null}={}) {
   if (!specification || specification.task !== 'inspect_room_for_printed_fire_indicator'
     || specification.specificationStatus !== 'reviewable') throw new Error('Complete and review a supported task first.');
   const bound = structuredClone(specification);
+  const moves=obstacleMoves(room);
+  room=structuredClone(room);
+  if(moves.length)room.obstacleMoves=moves;
   bound.simulationOptions=simulationOptions(specification.simulationOptions);
   bound.room = {...bound.room,configuration:structuredClone(room),binding:'browser_local_snapshot'};
   bound.execution = {mode:'simulation_only',started:true,roomSimulatorReady:true};
@@ -46,7 +49,8 @@ export function executeAction(run,call) {
   const event={sequence:++run.sequence,trigger:request.trigger,perception,action:request.function,
     targetId:request.parameters.doorId||request.parameters.targetId||request.parameters.objectId||null,
     success:response.status==='succeeded',reason:response.message,result:structuredClone(response.data),
-    call:request,response,pose:{...run.room.robot},simulation:true};
+    call:request,response,pose:{...run.room.robot},simulation:true,
+    ...(run.lastWorldChanges?.length?{worldChanges:structuredClone(run.lastWorldChanges)}:{})};
   event.perceptionAfter=observe(run);run.events.push(event);return event;
 }
 export function act(run,action,targetId,trigger='operator',context={}) {

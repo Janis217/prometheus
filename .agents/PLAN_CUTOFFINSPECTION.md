@@ -1,8 +1,8 @@
 # GPT-Live received-audio inspection plan
 
-Status (2026-10-30): CI-01/CI-02 implemented in the current checkout; CI-03
-automated acceptance in progress. Full isolated app/database acceptance and the
-operator trial remain open. Evidence: CUTOFF_INSPECTION_RESULTS.md. Originally
+Status (2026-11-13): CI-01/CI-02 implemented; CI-03 isolated app/database,
+browser/codec and packaging acceptance passed; operator handoff prepared.
+The physical operator trial remains open. Evidence: CUTOFF_INSPECTION_RESULTS.md. Originally
 written 2026-10-23; implementation does not establish that audio cut-offs are fixed.
 
 ## Goal and operating instructions

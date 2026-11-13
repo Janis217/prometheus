@@ -296,7 +296,20 @@ Status: complete (2026-11-10), explicitly requested by the user. Evidence: `VT13
 - [x] Display calls/results in both timelines and retain them in exported evidence.
 - [x] Verify live obstruction, replanning, failures, terminal outcomes and existing workflows.
 
-Full moving-object/floor-obstacle UI and hardware adapters are future work.
+VT-14 below adds scheduled furniture relocation; continuous moving actors,
+new floor-obstacle types and hardware adapters remain future work.
+
+### VT-14: Saved scheduled obstacle moves
+
+Status: complete (2026-11-13). User selected simulation only after the next-task
+discussion. Evidence: `VT14_RESULTS.md`.
+
+- [x] Add/remove chair/table relocations at numbered action boundaries in the room builder.
+- [x] Validate and retain schedules in imports, named room revisions and mission snapshots.
+- [x] Reject occupied runtime destinations without overlapping objects or the robot.
+- [x] Recheck planned robot actions against the changed world and replan normally.
+- [x] Display and export applied/blocked changes; repeat runs restore original state.
+- [x] Verify invalid schedules, legacy files, repeat runs, saved revisions and player UI.
 
 ## Original implementation decisions
 

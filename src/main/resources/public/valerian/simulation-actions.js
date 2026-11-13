@@ -39,5 +39,6 @@ export function formatActionCall(request){
 }
 export function formatActionEvent(event){
   if(!event.call)return `${event.action}: ${event.success?'success':'failed'} — ${event.reason}`;
-  return `${formatActionCall(event.call)} → ${event.response.status} [${event.response.code}] — ${event.response.message}`;
+  const changes=(event.worldChanges||[]).map(change=>`Obstacle ${change.objectId} to (${change.to.x}, ${change.to.y}): ${change.status}. `).join('');
+  return `${changes}${formatActionCall(event.call)} → ${event.response.status} [${event.response.code}] — ${event.response.message}`;
 }

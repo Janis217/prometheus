@@ -61,9 +61,10 @@ function render(){
     step.className='step';step.textContent=`Step ${event.sequence} · Robot (${event.pose.x}, ${event.pose.y})`;
     action.className='function-call';action.textContent=formatActionCall(event.call);
     outcome.className='function-outcome';outcome.dataset.status=event.response.status;outcome.textContent=`→ ${event.response.status} [${event.response.code}]`;
-    detail.textContent=event.response.message;item.append(step,action,outcome,detail);
+    detail.textContent=(event.worldChanges||[]).map(change=>`Obstacle ${change.objectId} to (${change.to.x}, ${change.to.y}): ${change.status}. `).join('')+event.response.message;item.append(step,action,outcome,detail);
     const details=document.createElement('details'),summary=document.createElement('summary'),data=document.createElement('pre');
-    summary.textContent='Result';data.textContent=JSON.stringify({data:event.response.data,pose:event.response.poseAfter,retryable:event.response.retryable},null,2);
+    summary.textContent='Result';data.textContent=JSON.stringify({data:event.response.data,pose:event.response.poseAfter,retryable:event.response.retryable,
+      ...(event.worldChanges?.length?{worldChanges:event.worldChanges}:{})},null,2);
     details.append(summary,data);item.append(details);return item;
   }));
   if(atEnd)list.scrollTop=list.scrollHeight;

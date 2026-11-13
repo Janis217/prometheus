@@ -30,6 +30,32 @@ export function opaque(room,x,y) {
   return !inside(room,x,y) || room.objects.some(o => o.x === x && o.y === y
     && (o.type === 'table' || o.type === 'chair' || (o.type === 'door' && !o.open)));
 }
+// Saved scenario data, never executable callbacks. Action numbers are one-based.
+export function obstacleMoves(room, input=room.obstacleMoves){
+  if(input===undefined)return [];
+  if(!Array.isArray(input)||input.length>32)throw new Error('Use at most 32 scheduled obstacle moves.');
+  const seen=new Set();
+  return input.map(move=>{
+    const object=room.objects.find(item=>item.id===move?.objectId);
+    const identity=`${move?.action}:${move?.objectId}`;
+    if(!object||!['chair','table'].includes(object.type)||!Number.isSafeInteger(move.action)||move.action<1||move.action>512
+      ||!inside(room,move.x,move.y)||seen.has(identity))
+      throw new Error('Each obstacle move needs a chair/table, action 1–512, an inside destination and a unique object/action pair.');
+    seen.add(identity);
+    return {action:move.action,objectId:object.id,x:move.x,y:move.y};
+  });
+}
+export function applyObstacleMoves(room, action){
+  return (room.obstacleMoves||[]).filter(move=>move.action===action).map(move=>{
+    const object=room.objects.find(item=>item.id===move.objectId);
+    const from={x:object.x,y:object.y},to={x:move.x,y:move.y};
+    const occupied=(room.robot.x===to.x&&room.robot.y===to.y)
+      ||room.objects.some(item=>item.id!==object.id&&item.x===to.x&&item.y===to.y);
+    if(!occupied)Object.assign(object,to);
+    return {objectId:object.id,action,from,to,status:occupied?'blocked':'applied',
+      reason:occupied?'Destination occupied; obstacle stayed in place.':'Scheduled obstacle move applied.'};
+  });
+}
 // Grid ray traversal makes corners/walls opaque and uses the same geometry as movement.
 function lineOfSight(room,from,to) {
   const dx = to.x-from.x, dy = to.y-from.y, steps = Math.max(Math.abs(dx),Math.abs(dy))*4;

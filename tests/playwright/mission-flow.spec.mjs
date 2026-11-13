@@ -115,6 +115,30 @@ test('two-tab room creation, guided mission setup and explicit simulation Start'
   }finally{if(id)expect((await request.delete(`/demo/agents/${id}`,{headers:{'X-Prometheus-Access-Code':code}})).ok()).toBe(true);}
 });
 
+test('player shows scheduled obstacle changes, replans and exports repeatable evidence',async({page})=>{
+  const room=createRoom();place(room,'chair',3,3);place(room,'fire_picture',5,0);
+  room.obstacleMoves=[{action:2,objectId:'object-1',x:1,y:0}];
+  const review={mission:JSON.stringify({missionType:'fire_hotspot_inspection',objective:'Find printed fire indicator',environment:'indoor_flat',revision:1,missingInformation:[],approvalState:'awaiting_supervisor_approval'}),
+    savedMission:{name:'Moving obstacle',configuredRevision:1,room:{id:'00000000-0000-0000-0000-000000000001',name:'Scheduled room',revision:1,configuration:JSON.stringify(scenarioDocument(room))}}};
+  await page.route('**/demo/agents/*/mission-review',route=>route.fulfill({json:review}));
+  await page.goto('/');await page.evaluate(()=>sessionStorage.setItem('prometheus.valerian.accessCode','test-access'));
+  await page.goto('/valerian/simulation.html?mission=00000000-0000-0000-0000-000000000001');
+  await expect(page.locator('#player-phase')).toHaveText('Ready');await page.clock.install();
+  for(let repeat=0;repeat<2;repeat++){
+    await page.locator('#start').click();await page.clock.runFor(20000);
+    await expect(page.locator('#player-phase')).toHaveText('Completed');
+    await expect(page.locator('#timeline')).toContainText('Obstacle object-1 to (1, 0): applied');
+    await expect(page.locator('#timeline')).toContainText('OBSTACLE_BLOCKED');
+    const download=page.waitForEvent('download');await page.locator('#export-run').click();
+    const report=JSON.parse(await readFile(await(await download).path(),'utf8'));
+    expect(report.initialRoom.objects[0]).toMatchObject({x:3,y:3});
+    expect(report.initialRoom.obstacleMoves).toEqual(room.obstacleMoves);
+    expect(report.events[1].worldChanges[0]).toMatchObject({status:'applied',to:{x:1,y:0}});
+  }
+  await page.setViewportSize({width:390,height:844});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
+
 test('player displays function arguments and typed blocked results from a locked-door simulation',async({page})=>{
   const room=createRoom();place(room,'door',1,0,{locked:true});place(room,'chair',0,1);place(room,'fire_picture',5,0);
   const review={mission:JSON.stringify({missionType:'fire_hotspot_inspection',objective:'Find printed fire indicator',environment:'indoor_flat',revision:1,missingInformation:[],approvalState:'awaiting_supervisor_approval'}),

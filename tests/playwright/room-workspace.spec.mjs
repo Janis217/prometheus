@@ -25,6 +25,29 @@ async function mount(page){
 const room=(page,name)=>page.locator(`[data-room="${name}"]`);
 const slot=(page,x,y)=>page.locator(`[data-x="${x}"][data-y="${y}"]`);
 
+test('scheduled furniture moves persist, block the planned path and reset with a fresh run',async({page})=>{
+  await mount(page);
+  await room(page,'tool').selectOption('chair');await slot(page,3,3).click();
+  await room(page,'tool').selectOption('fire_picture');await slot(page,5,0).click();
+  await room(page,'obstacles').locator('summary').click();
+  await room(page,'obstacle-object').selectOption('object-1');
+  await room(page,'obstacle-action').fill('2');
+  await room(page,'obstacle-add').click();
+  await expect(room(page,'obstacle-list')).toContainText('Before action 2: object-1 to (1, 0)');
+  await room(page,'save').click();await page.reload();await mount(page);await room(page,'load').click();
+  await expect(room(page,'obstacle-list')).toContainText('Before action 2: object-1');
+  await room(page,'generate').click();await room(page,'start').click();await room(page,'pause').click();
+  await expect(room(page,'obstacle-editor')).toBeHidden();
+  await room(page,'step').click();
+  await expect(room(page,'timeline')).toContainText('OBSTACLE_BLOCKED');
+  await expect(room(page,'timeline')).toContainText('Obstacle object-1 to (1, 0): applied');
+  await expect(slot(page,1,0)).toHaveAttribute('aria-label',/Chair/);
+  await room(page,'edit').click();await expect(slot(page,3,3)).toHaveAttribute('aria-label',/Chair/);
+  await room(page,'obstacles').locator('summary').click();
+  await room(page,'obstacle-list').getByRole('button',{name:'Remove move'}).click();
+  await expect(room(page,'obstacle-list').locator('li')).toHaveCount(0);
+});
+
 test('builder, locked door, smoke and mission invalidation use the visible workflow',async({page})=>{
   await mount(page);
   await room(page,'shape').selectOption('l_shaped');

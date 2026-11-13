@@ -44,13 +44,26 @@ The checklist at the top is the high-level milestone tracker. Codex must keep it
 - [x] VT-11: Cockpit Start readiness and recovery
 - [x] VT-12: Clean mission entry and separate simulation tab
 - [x] VT-13: Simulated function calls, parameters and structured results
-- [ ] QA-01: Whole-tool offline regression and recovery coverage (in progress)
+- [x] QA-01: Whole-tool offline regression and recovery coverage (automated scope)
+- [x] VT-14: Saved scheduled obstacle moves and observable replanning (simulation only)
 
 The checklist above is the summary view. The detailed milestone states and evidence follow below.
 
+## VT-14 scheduled obstacle scenarios (2026-11-13)
+
+Complete for simulation software. User selected simulation only when asked about
+the next physical-platform milestone; hardware work stays deferred. Extended the
+existing VT-13 obstacle hook capability with a saved room editor for timed chair/
+table relocation, runtime occupancy rejection, visible world-change events and
+exported evidence. Repeated runs restore the saved starting world and schedule.
+Verification: 195 Node tests; 18 room/library browser regressions, 2 player cases
+and 1 additional named-room schedule case passed (21 distinct browser cases).
+Evidence: `VT14_RESULTS.md`. Continuous moving actors, new floor-obstacle types
+and hardware adapters remain separate future work.
+
 ## QA-01 whole-tool regression (2026-11-10)
 
-In progress at user request. Run all JavaScript units, the full Java suite on a
+Completed 2026-11-13 at user request. Ran all JavaScript units, the full Java suite on a
 random disposable schema, and browser coverage of the main application with
 controlled provider/media fixtures. Add failure/recovery tests and fix failures.
 Preserve the running application database and keep paid/physical trials separate.
@@ -59,7 +72,10 @@ room test, plus authentication tests inheriting local password-free demo setting
 New coverage includes access revocation, server loss, safety changes, failed save
 popup cleanup, moving targets and executor-hook failures. Confirmed: 191 Node,
 702 Java, 3 runner guards, 28 corrected legacy browser cases and 2 local-demo
-cases pass. Final full browser sweep remains pending. Continuation and evidence:
+cases pass. Final browser sweep passed: Live enabled 126 passed/1 skipped;
+Live disabled 124 passed/5 skipped. Secondary surfaces separately passed 2 per
+mode. Skips match password-free/Live-only conditions. Node and runner guards
+were rerun successfully on 2026-11-13. Evidence and verification limits:
 [QA01_RESULTS.md](QA01_RESULTS.md).
 
 ## VT-13 simulated function calls (2026-11-10)
@@ -478,7 +494,14 @@ independent shared Cutoff Inspection in the current checkout.
 
 ## 11. Cutoff Inspection
 
-Status: open/partially verified (CI-01/CI-02 delivered; CI-03 app acceptance pending)
+Status: automated acceptance complete; physical operator trial open
+
+2026-11-13: passed CI-03 isolated acceptance using the existing offline runner
+and local administration properties; owned artifacts `target/gptlive-acceptance-d49ed5097c`.
+Fresh Live units: 76 passed; Java smoke: 2 passed; browser Live enabled: 32 passed;
+disabled: 7 passed/3 expected Live-only skips. Native Chrome WebM/Opus export and
+packaging passed. Runner exited 0 and confirmed cleanup of owned resources.
+Physical operator trial remains open; handoff: `.doc/cutoff-operator-trial.md`.
 
 Plan: `.agents/PLAN_CUTOFFINSPECTION.md`.
 Results: `.agents/CUTOFF_INSPECTION_RESULTS.md`.
@@ -487,7 +510,8 @@ Results: `.agents/CUTOFF_INSPECTION_RESULTS.md`.
   content, final flush, failure isolation, discard/revocation and resource ownership.
 - [x] CI-02: English controls and paired audio/metadata downloads; ordinary
   Telemetry stays content-free and session/generation associations are explicit.
-- [ ] CI-03: full isolated application/MySQL acceptance and final handoff gate.
+- [x] CI-03: full isolated application/MySQL automated acceptance and operator handoff.
+- [ ] Physical operator trial and evidence-based cutoff diagnosis.
 
 Verification: 76 Live Node tests, 14 Java client contracts, packaging and diff
 checks passed. 27 distinct browser cases have passing evidence across broad and
@@ -495,6 +519,7 @@ focused runs (initial failures and fixes are retained in results). Native Chrome
 WebM/Opus decoding verified a late tone and silent tail in the actual export.
 Desktop light/mobile dark controls were visually inspected.
 
+Historical prerequisite gap (resolved by the 2026-11-13 run above):
 The initial integrated attempt lacked local prerequisites. DM-02 subsequently
 provided workspace-local PyMySQL and a dedicated loopback MySQL setup documented
 in .doc/dm02-validation.md. Cutoff's own CI-03 was not run in DM-02; its checkbox
@@ -824,7 +849,7 @@ Next dependency: DM-06 reuses the validated handoff contract for one chosen plat
 
 ## 18. DM-06: Physical Embodiment Pilot
 
-Status: open/planned; implementation not started.
+Status: open/deferred; user chose simulation only on 2026-11-13.
 
 Depends on: DM-05 simulator acceptance, DM-03 safety checks, DM-04 supervisor
 authorization and a passed DM-02 real-model gate.

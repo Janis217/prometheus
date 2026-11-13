@@ -1,4 +1,4 @@
-import {headings,inside,visibleCells,opaque} from './room-world.js';
+import {headings,inside,visibleCells,opaque,applyObstacleMoves} from './room-world.js';
 import {actionProtocolVersion,directionNames,validateActionRequest,findingParameters} from './simulation-actions.js';
 
 const outcome=(status,code,message,data={},retryable=false)=>({status,code,message,data,retryable});
@@ -102,7 +102,9 @@ const functions={
 export function executeSimulationAction(run,input){
   const request=validateActionRequest(input,run.sequence),before={...run.room.robot};
   let response;
+  run.lastWorldChanges=[];
   try{
+    if(request.function!=='stop')run.lastWorldChanges=applyObstacleMoves(run.room,run.sequence+1);
     // Trusted, synchronous scenario hook: update live obstacles or return a fault.
     // The action still checks the resulting world immediately before any effect.
     const fault=run.beforeAction?.({request:structuredClone(request),world:run.room});

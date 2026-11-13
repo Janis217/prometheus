@@ -4,13 +4,37 @@ Date: 2026-10-30. Plan: [PLAN_CUTOFFINSPECTION.md](PLAN_CUTOFFINSPECTION.md).
 
 ## Status and scope
 
+2026-11-13 continuation: CI-03 isolated acceptance passed in owned schema
+`prometheus_gptlive_d49ed5097c`; artifacts `target/gptlive-acceptance-d49ed5097c`.
+Command: set PYTHONPATH to target/test-python and PLAYWRIGHT_CHROMIUM_CHANNEL to
+chrome, then run `python tests/gptlive/run_acceptance.py --database-properties
+src/main/resources/application.properties --java-tests LiveCockpitSmokeIntegrationTest
+--browser --live-only`. The properties supply local administration credentials;
+the runner generates the test database. No paid-provider flags are used.
+The local PyMySQL dependency is accessible under approved execution; the earlier
+missing connect API observation was caused by sandbox access restrictions.
+Fresh Live units: 76 passed. Java smoke: 2 passed, no failures/errors/skips.
+Chrome browser: Live enabled 32 passed; disabled 7 passed/3 expected Live-only
+skips. Both last-run JSON files report passed with no failed IDs. Runner exited
+0 and confirmed its owned app/schema/account were removed.
+Native HeadlessChrome 157 WebM/Opus: 2 chunks, 9,137 bytes, decoded duration
+1.68 s, late-tone RMS 0.21227 and silent-tail RMS 0.00000363. Artifact:
+`browser-true/valerian-gptlive-received--f03ba-a-late-tone-and-silent-tail/native-codec-evidence.json`
+under the acceptance directory above. This synthetic test is not physical audio.
+Offline packaging initially failed because packaging-plugin dependencies were
+not cached. Approved online `.\mvnw.cmd -q -DskipTests package` then passed;
+no dependency versions or production code were changed.
+Operator handoff: [trial checklist and blank record](../.doc/cutoff-operator-trial.md).
+Physical trial remains NOT RUN, so the overall Cutoff acceptance stays open.
+
 - [x] CI-01: bounded independent received-track recorder.
 - [x] CI-02: one-session operator controls and correlated local exports.
-- [ ] CI-03: isolated application/MySQL acceptance and final operator handoff gate.
+- [x] CI-03: isolated application/MySQL automated acceptance and operator handoff.
+- [ ] Consenting-adult physical operator trial and cutoff diagnosis.
 
 Software is implemented and unit/browser/codec/package verified. The full backlog
-entry remains open because the plan's isolated application/database gate has not
-run. Physical cutoff diagnosis is also unverified. This is diagnostic capture,
+entry remains open for the physical operator trial. Isolated application/database
+acceptance passed on 2026-11-13. Physical cutoff diagnosis is unverified. This is diagnostic capture,
 not a fix for missing words. Gala stays open/deferred and does not block this work.
 
 The user explicitly requested implementation in this existing dirty main checkout.
@@ -136,7 +160,7 @@ Working directory: repository root. Java checks use process-local
   repository are absent/outside scope. Shared operator instructions are in README
   and the original plan's operator-trial section, without inventing Gala content.
 
-## Next step
+## Historical next step (automated gate resolved above)
 
 Update from DM-02 (2026-10-30): workspace-local PyMySQL and a dedicated loopback
 MySQL setup are now available; see .doc/dm02-validation.md. That milestone verified

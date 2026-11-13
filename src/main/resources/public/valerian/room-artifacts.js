@@ -1,5 +1,6 @@
 import {createRoom,inside,wallSlot} from './room-simulation.js';
 import {actionProtocolVersion} from './simulation-actions.js';
+import {obstacleMoves} from './room-world.js';
 
 export const scenarioLimit=65536;
 const types=new Set(['door','window','fire_picture','picture','chair','table']);
@@ -31,7 +32,9 @@ export function validatedRoom(input){
     }
     room.objects.push(object);ids.add(item.id);slots.add(slot);
   }
-  return {...room,revision:input.revision,smoke:input.smoke,robot:{x:robot.x,y:robot.y,heading:robot.heading}};
+  const moves=obstacleMoves(room,input.obstacleMoves);
+  return {...room,revision:input.revision,smoke:input.smoke,robot:{x:robot.x,y:robot.y,heading:robot.heading},
+    ...(moves.length?{obstacleMoves:moves}:{})};
 }
 
 export function scenarioDocument(room){

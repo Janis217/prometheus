@@ -87,6 +87,66 @@ are not serialized. IDs are ordered within a run; repeats restart their sequence
 
 ## Extension boundary for later scenarios
 
+### Saved obstacle moves
+
+In the room builder, expand **Scheduled obstacle moves**, select a chair/table,
+choose **Before action** (1–512), and enter a destination x/y. **Add move** adds
+it to the room; save the named room and bind that revision to a mission as usual.
+The coordinates are the same one-metre grid shown by slot labels. A room supports
+up to 32 moves. Remove a move in this panel; removing furniture removes its moves.
+
+Action numbering includes the initial observation (action 1), manual actions and
+failed actions. To move a chair into the first planned movement, use action 2.
+Moves execute after planning but before the action's live-world checks. Each move
+is a deterministic relocation, not continuous animation or a physical trajectory.
+Moves at the same action execute in saved list order; an object can appear only
+once per action. Occupied destinations, including the robot, block the relocation
+and leave furniture unchanged. Stop never applies a scheduled move. Moves beyond
+the end of a run remain unexecuted; they are retained in its initial configuration.
+
+The optional version-1 room field `obstacleMoves` contains entries such as
+`{"action":2,"objectId":"object-1","x":1,"y":0}`. Imports, library saves and
+run startup validate object identity, bounds, action numbers and duplicate pairs.
+Old room files without schedules keep their existing behavior. Changes to saved
+rooms require the existing explicit revision save/rebinding workflow.
+
+Events with scheduled moves add `worldChanges` containing object ID, action,
+from/to positions, applied/blocked status and reason. Both timelines display the
+change; run exports preserve it alongside the original schedule and final world.
+The original layout is immutable and each new run starts its schedule afresh.
+
+### Programmatic hooks
+
+### Saved obstacle moves
+
+In the room builder, expand **Scheduled obstacle moves**, select a chair/table,
+choose **Before action** (1–512), and enter a destination x/y. **Add move** adds
+it to the room; save the named room and bind that revision to a mission as usual.
+The coordinates are the same one-metre grid shown by slot labels. A room supports
+up to 32 moves. Remove a move in this panel; removing furniture removes its moves.
+
+Action numbering includes the initial observation (action 1), manual actions and
+failed actions. To move a chair into the first planned movement, use action 2.
+Moves execute after planning but before the action's live-world checks. Each move
+is a deterministic relocation, not continuous animation or a physical trajectory.
+Moves at the same action execute in saved list order; an object can appear only
+once per action. Occupied destinations, including the robot, block the relocation
+and leave furniture unchanged. Stop never applies a scheduled move. Moves beyond
+the end of a run remain unexecuted; they are retained in its initial configuration.
+
+The optional version-1 room field `obstacleMoves` contains entries such as
+`{"action":2,"objectId":"object-1","x":1,"y":0}`. Imports, library saves and
+run startup validate object identity, bounds, action numbers and duplicate pairs.
+Old room files without schedules keep their existing behavior. Changes to saved
+rooms require the existing explicit revision save/rebinding workflow.
+
+Events with scheduled moves add `worldChanges` containing object ID, action,
+from/to positions, applied/blocked status and reason. Both timelines display the
+change; run exports preserve it alongside the original schedule and final world.
+The original layout is immutable and each new run starts its schedule afresh.
+
+### Programmatic hooks
+
 - `room-world.js`: geometry, collision and visibility.
 - `simulation-actions.js`: call creation, schema/ID validation and text formatting.
 - `simulation-action-executor.js`: function registry, preconditions and effects.
